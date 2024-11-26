@@ -20,6 +20,6 @@ ALB_CR_J.XPT
 
 
 Order of scripts:
-Data_Clean_Perchlorate.Rmd
-Demographics_Perchlorate.Rmd
+Data_Clean_Perchlorate.Rmd;
+Demographics_Perchlorate.Rmd;
 Urine_Creatinine_Perchlorate.Rmd
