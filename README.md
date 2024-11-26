@@ -9,13 +9,13 @@ R Version: 4.4.1 (2024-06-14) -- "Race for Your Life"
 
 Required data files:
 From Our Study--
-Yuma_HQ_DataFile.xlsx
-2021-0072_Urinary Creatinine Results.xlsx
+Yuma_HQ_DataFile.xlsx;
+2021-0072_Urinary Creatinine Results.xlsx;
 2021-0072_Urinary Perchlorate Report.xlsx
 
 From NHANES--
-PERNT_J.XPT
-DEMO_J.XPT
+PERNT_J.XPT;
+DEMO_J.XPT;
 ALB_CR_J.XPT
 
 
