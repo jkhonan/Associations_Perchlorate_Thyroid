@@ -41,7 +41,7 @@ library(caret)
 library(ggforce)
 
 #Setting WD
-#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+setwd("~/Desktop/Yuma_Project/Yuma_R_Project/")
 
 #Number of concentrations below the limit of detection = None
 kable(All_Data %>% 
@@ -244,7 +244,7 @@ hist(log10(All_Data$Result_P_ng_mL), xlab = "Log10 Perchlorate", main = "Distrib
 hist(log(All_Data$Result_P_ng_mL/All_Data$Result_C_ng_mL), xlab = "Ln Perchlorate", main = "Distribution of Perchlorate Levels After Log Transformation")
 hist(log10(All_Data$Result_P_ng_mL/All_Data$Result_C_ng_mL), xlab = "Log10 Perchlorate", main = "Distribution of Perchlorate Levels After Log Transformation")
 
-#All of these look roughly the same. The transition with either ln or log10 does normalize the data. Again, will stick with log10 for consistency, particularly with CDC literature. 
+#All of these look rooouuuuggghhhly the same. The transition with either ln or log10 does normalize the data. Again, will stick with log10 for consistency, particularly with CDC literature. 
 
 Urine_Perch_Creat$Result_C_mg_dL <- as.numeric(Urine_Perch_Creat$Result_C_mg_dL)*10000
 hist((log10(All_Data$Result_P_ng_mL/All_Data$Result_C_ng_mL)), xlab = "Log10 Perchlorate per Log10 Creatinine", main = "Distribution of Perchlorate Levels Standardized by Creatinine 
@@ -714,6 +714,70 @@ ID_BMI <- All_Data[, c("ID", "bmi")]
 df2 <- merge(ID_BMI, Urine_Perch_Creat, by="ID")
 df2 <- as.data.frame(df2)
 
+df2$bmi <- as.numeric(df2$bmi)
+df2$Result_P_ng_mL <- as.numeric(df2$Result_P_ng_mL)
+df2$Result_C_mg_dL <- as.numeric(df2$Result_C_mg_dL)
+df2$Result_C_ng_mL <- df2$Result_C_mg_dL*10000
+
+ggplot(df2, aes(y=bmi, x=log10(Result_P_ng_mL)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  ylab("BMI")+
+  xlab("Log10 Perchlorate")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black')) 
+
+
+ggplot(df2, aes(y=log10(bmi), x=log10(Result_P_ng_mL)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  ylab("Log10 BMI")+
+  xlab("Log10 Perchlorate / Creatinine")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black'))
+
+
+ggplot(df2, aes(y=log10(bmi), x=log10(Result_P_ng_mL)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  ylab("BMI")+
+  xlab("Log10 Perchlorate")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black'))
+
+ggplot(df2, aes(x=log10(bmi), y=log10(Result_C_mg_dL)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  xlab("BMI")+
+  ylab("Log10 Creatinine")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black'))
+
+ggplot(df2, aes(y=log10(bmi), x=log10(Result_P_ng_mL/Result_C_ng_mL)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  xlab("Log10 Perchlorate/Creatinine")+
+  ylab("Log10 BMI")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black'))
+
+ggplot(df2, aes(y=log(bmi), x=log10(Result_P_ng_mL/Result_C_ng_mL)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  xlab("Log10 Perchlorate/Creatinine")+
+  ylab("Log10 BMI")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black'))
+ #Likely more dependent on lean BMI
+
+ggplot(df2, aes(y=log10(as.numeric(bmi)), x=log10(as.numeric(Result_C_mg_dL))))+ #Is BMI related to hydration?
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  xlab("Log10 BMI")+
+  ylab("Log10 Creatinine")+
+  theme(text = element_text(size = 15),
+        panel.background = element_rect(fill = '#ffffff', color = 'black'))
+
 ggplot(data=All_Data, aes(x=ID, y=log10(as.numeric(Result_P_ng_mL))))+
   geom_jitter(aes(color=as.factor(Thyroid_cancer_D)))+
   scale_color_discrete("Patient with Self-Report\nThyroid Cancer", labels=c("0"="No", "1"="Yes", "NA"="NA"))+
@@ -794,8 +858,8 @@ ggplot(data=All_Data, aes(x=ID, y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Re
   xlab("")+
   ylab("Log10 Perchlorate / Creatinine")
 
-#ggplot(data=subset(All_Data, !is.na(All_Data$pos)), aes(x=ID, y=log(as.numeric(Result_P_ng_mL))))+
-#  geom_jitter(aes(color=as.factor(pos), shape=as.factor(pos)), size=2)+
+#ggplot(data=subset(All_Data, !is.na(All_Data$pos_recode)), aes(x=ID, y=log(as.numeric(Result_P_ng_mL))))+
+#  geom_jitter(aes(color=as.factor(pos_recode), shape=as.factor(pos_recode)), size=2)+
 #  scale_color_discrete("Patient with Self-Report\nPCOS", labels=c("0"="No", "1"="Yes", "NA"="NA"))+
 #  scale_shape_discrete("Patient with Self-Report\nPCOS", labels=c("0"="No", "1"="Yes", "NA"="NA"))+
 #  theme(axis.text.x = element_blank(),
@@ -805,8 +869,8 @@ ggplot(data=All_Data, aes(x=ID, y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Re
 #  xlab("")+
 #  ylab("Ln Perchlorate")
 
-ggplot(data=subset(All_Data, !is.na(All_Data$pos)), aes(x=ID, y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL))))+
-  geom_jitter(aes(color=as.factor(pos), shape=as.factor(pos)), size=2)+
+ggplot(data=subset(All_Data, !is.na(All_Data$pos_recode)), aes(x=ID, y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL))))+
+  geom_jitter(aes(color=as.factor(pos_recode), shape=as.factor(pos_recode)), size=2)+
   geom_hline(aes(yintercept=mean(log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), na.rm = T)))+
   scale_color_discrete("Patient with Self-Report\nPCOS", labels=c("0"="No", "1"="Yes", "NA"="NA"))+
   scale_shape_discrete("Patient with Self-Report\nPCOS", labels=c("0"="No", "1"="Yes", "NA"="NA"))+
@@ -990,9 +1054,9 @@ max(All_Data$Result_P_ng_mL, na.rm = T)
 mean(All_Data$Result_P_ng_mL, na.rm = T)
 
 
-NHANES_Perch <- read_xpt("PERNT_J.XPT") #URXUP8 in ng/mL
-NHANES_Demo <- read_xpt("DEMO_J.XPT")
-NHANES_Creat <- read_xpt("ALB_CR_J.XPT") #UXRUCR in mg/dL
+NHANES_Perch <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/PERNT_J.XPT") #URXUP8 in ng/mL
+NHANES_Demo <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/DEMO_J.XPT")
+NHANES_Creat <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/ALB_CR_J.XPT") #UXRUCR in mg/dL
 NHANES <- merge(NHANES_Demo, NHANES_Perch, by=c("SEQN"))
 NHANES <- merge(NHANES, NHANES_Creat, by=c("SEQN"))
 NHANES <- subset(NHANES, NHANES$RIDAGEYR>=18)
@@ -1431,7 +1495,7 @@ All_Data %>%
 mean(Sampled_All_Data$Result_P_ng_mL, na.rm = T) #Same, just checking my mathz
 
 
-geoMean(as.numeric(Sampled_NHANES$URXUP8), na.rm = T)
+geoMean(as.numeric(Sampled_NHANES$URXUP8), na.rm = T) #2.138
 geoSD(as.numeric(Sampled_NHANES$URXUP8), na.rm = T)
 range(as.numeric(Sampled_NHANES$URXUP8), na.rm = T)
 median(as.numeric(Sampled_NHANES$URXUP8), na.rm = T)
@@ -1440,12 +1504,12 @@ range(as.numeric(Sampled_NHANES$URXUP8), na.rm = T)
 geoMean(as.numeric(Sampled_NHANES$URXUCR), na.rm = T)
 geoSD(as.numeric(Sampled_NHANES$URXUCR), na.rm = T)
 
-geoMean(as.numeric(Sampled_All_Data$Result_P_ng_mL), na.rm = T)
+geoMean(as.numeric(Sampled_All_Data$Result_P_ng_mL), na.rm = T) #2.32
 geoSD(as.numeric(Sampled_All_Data$Result_P_ng_mL), na.rm = T)
 range(as.numeric(Sampled_All_Data$Result_P_ng_mL), na.rm = T)
 median(as.numeric(Sampled_All_Data$Result_P_ng_mL), na.rm = T)
 
-geoMean(as.numeric(Sampled_cases$Result_P_ng_mL), na.rm = T)
+geoMean(as.numeric(Sampled_cases$Result_P_ng_mL), na.rm = T) #2.536
 geoSD(as.numeric(Sampled_cases$Result_P_ng_mL), na.rm = T)
 sum(!is.na(Sampled_cases$Result_P_ng_mL)) #124
 
@@ -1465,7 +1529,7 @@ geoMean(as.numeric(Sampled_controls$Result_C_mg_dL), na.rm = T)
 geoSD(as.numeric(Sampled_controls$Result_C_mg_dL), na.rm = T)
 sum(!is.na(Sampled_controls$Result_C_mg_dL)) #129
 
-geoMean(as.numeric(Sampled_NHANES$URXUP8)/(as.numeric(Sampled_NHANES$URXUCR)*10000), na.rm = T)
+geoMean(as.numeric(Sampled_NHANES$URXUP8)/(as.numeric(Sampled_NHANES$URXUCR)*10000), na.rm = T) #2.209 2.21
 geoSD(as.numeric(Sampled_NHANES$URXUP8)/(as.numeric(Sampled_NHANES$URXUCR)*10000), na.rm = T)
 range(as.numeric(Sampled_NHANES$URXUP8)/(as.numeric(Sampled_NHANES$URXUCR)*10000), na.rm = T)
 
@@ -1648,6 +1712,719 @@ t.test(Sampled_All_Data$Result_P_ng_mL, Sampled_All_Data_NonHisp$Result_P_ng_mL,
 All_Data %>% 
   filter(Result_P_ng_mL>=15)
 #C1044, R1014, Y1044
+```
+
+### NHANES After Reviewer Feedback
+```{r NHANES_Reviewed}
+#Libraries
+library(haven)
+library(survey)
+library(EnvStats)
+
+#2018 NHANES data files
+NHANES_Perch <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/PERNT_J.XPT") #URXUP8 in ng/mL
+NHANES_Demo <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/DEMO_J.XPT")
+NHANES_Creat <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/ALB_CR_J.XPT")
+
+merged_data_NHANES2018 <- merge(NHANES_Perch, NHANES_Demo, by="SEQN")
+
+adult_data_NHANES <- subset(merged_data_NHANES2018, RIDAGEYR >= 18)
+
+adult_data_NHANES <- subset(adult_data_NHANES, !is.na(adult_data_NHANES$URXUP8))
+
+survey_design <- svydesign(
+  id = ~1,
+  weights = ~WTSA2YR, #Using the 2 year weights variable
+  data = adult_data_NHANES
+)
+
+weighted_stats <- svymean(~URXUP8, design = survey_design)
+summary(weighted_stats) #Looks a little off so I'm going to manually double check.
+
+weighted_mean <- svytotal(~URXUP8, design = survey_design)
+summary(weighted_mean) #Hm
+
+#Going to do manually (n=1791)
+weighted_perch <- adult_data_NHANES$WTSA2YR*adult_data_NHANES$URXUP8
+sum_weighted_perch <- sum(weighted_perch)
+sum_weights <- sum(adult_data_NHANES$WTSA2YR)
+
+weighted_mean <- sum_weighted_perch/sum_weights #3.342
+#same value as weighted_stats, so that's good.
+adult_data_NHANES_WeightedPerch <- weighted_perch/sum_weights #Only for distribution, not for values.
+
+weighted_variance <- sum(adult_data_NHANES$WTSA2YR * (adult_data_NHANES$URXUP8 - weighted_mean)^2) / sum_weights
+weighted_std_dev <- sqrt(weighted_variance) #5.797566
+
+#Median: 
+sorted_NHANES_Perch <- adult_data_NHANES[order(adult_data_NHANES$URXUP8), ]
+
+# Calculate cumulative weights and values
+cum_weights <- cumsum(sorted_NHANES_Perch$WTSA2YR)
+cum_weighted_values <- cumsum(sorted_NHANES_Perch$WTSA2YR * sorted_NHANES_Perch$URXUP8)
+
+# Find the index where cumulative weights exceed half the total
+half_total_weights <- sum(sorted_NHANES_Perch$WTSA2YR) / 2
+median_index <- which(cum_weights >= half_total_weights)[1]
+
+# The weighted median is the URXUP8 value at this index
+weighted_median <- sorted_NHANES_Perch$URXUP8[median_index] #2.34
+
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean <- exp(sum(adult_data_NHANES$WTSA2YR*log(adult_data_NHANES$URXUP8))/sum(adult_data_NHANES$WTSA2YR)) #2.197
+
+#geoSD: 
+sqrt(exp(sum(adult_data_NHANES$WTSA2YR * ((log(adult_data_NHANES$URXUP8) - log(geomean))^2)) / sum(adult_data_NHANES$WTSA2YR)))
+
+#Now creatinine-corrected perchlorate:
+merged_data_NHANES2018_Creat <- merge(merged_data_NHANES2018, NHANES_Creat, by="SEQN")
+
+adult_data_NHANES2018_Creat <- subset(merged_data_NHANES2018_Creat, merged_data_NHANES2018_Creat$RIDAGEYR >= 18)
+
+adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUP8)) #No missing perch
+
+adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUCR)) #No missing creat
+
+adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
+
+#Going to do manually (n=1790) for creatinine corrected perch.
+weighted_perch_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$Creat_Corr_Perch
+sum_weighted_perch_creat <- sum(weighted_perch_creat)
+sum_weights_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
+
+weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_creat #3.3381e-06
+
+weighted_variance_perch_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR * (adult_data_NHANES2018_Creat$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_creat
+weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.692114
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_creat <- exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*log(adult_data_NHANES2018_Creat$Creat_Corr_Perch))/sum(adult_data_NHANES2018_Creat$WTSA2YR)) #2.326121e-06
+
+#geoSD: 
+sqrt(exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*((log(adult_data_NHANES2018_Creat$Creat_Corr_Perch)-log(geomean_creat))^2))/sum(adult_data_NHANES2018_Creat$WTSA2YR))) #1.3287
+
+#Forgot to do creatinine, so coming back here to finish that...
+
+#Going to do manually (n=1790) for creatinine corrected perch.
+weighted_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$URXUCR
+sum_weighted_creat <- sum(weighted_creat)
+sum_weights_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
+
+weighted_mean_creat <- sum_weighted_creat/sum_weights_creat #119.2638
+
+weighted_variance_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR * (adult_data_NHANES2018_Creat$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
+weighted_std_dev_creat <- sqrt(weighted_variance_creat) #78.08952
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_creat <- exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*log(adult_data_NHANES2018_Creat$URXUCR))/sum(adult_data_NHANES2018_Creat$WTSA2YR)) #94.47658
+
+#geoSD: 
+sqrt(exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*((log(adult_data_NHANES2018_Creat$URXUCR)-log(geomean_creat))^2))/sum(adult_data_NHANES2018_Creat$WTSA2YR))) #1.306614
+
+
+
+
+
+
+hline_data_A <- data.frame(
+  yintercept = c(15, 3.342, 3.095675),
+  label = c("Interim Health Advisory Limit", "National Average", "Sample Average"),
+  color = c("blue", "firebrick", "forestgreen")
+)
+
+tiff("Perchlorate_NHANES_Graph_Review_Update.tiff", units="in", width=10, height=5, res=300) #Only to save in high def.
+ggplot(All_Data) +
+  geom_point(aes(x = Sample_ID, y = Result_P_ng_mL, shape = as.factor(Site)), size = 2) +
+  scale_shape_discrete(labels = c("1" = "CSF", "2" = "RCBH", "3" = "YRMC")) +
+  geom_hline(data = hline_data_A, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2) +
+  xlab("") +
+  ylab("Urinary Perchlorate (ng/mL)\n") +
+  labs(shape = "Recruitment Site", labels = c("1" = "CSF", "2" = "RCBH", "3" = "YRMC")) +
+  theme(
+    axis.ticks = element_blank(),
+    axis.text.x = element_blank(),
+    panel.background = element_rect(fill = '#ffffff'),
+    text = element_text(size = 20),
+    axis.line = element_line(color="#000000")
+  ) +
+  scale_linetype_manual(
+    name = "Perchlorate Levels",
+    values = c(1, 2, 5),
+    labels = c("Interim Health Advisory Limit", "National Average", "Sample Average")
+  ) +
+  scale_color_manual(
+    name = "Perchlorate Levels",
+    values = setNames(hline_data_A$color, hline_data_A$label)
+  ) +
+  guides(
+    linetype = guide_legend(title = "Perchlorate Levels"),
+    color = guide_legend(title = "Perchlorate Levels")
+  )
+dev.off()
+
+
+hline_data2 <- data.frame(
+  yintercept = c(15, 2.34, 2.40),
+  label = c("EPA Health Advisory Limit", "National Median", "Sample Median"),
+  color = c("blue", "firebrick", "forestgreen")
+)
+
+point_fill_data <- data.frame(
+  value = c(1, 2, 3),
+  label = c("CSF", "RCBH", "YRMC"),
+  color = c("midnightblue", "indianred4", "grey52")
+)
+
+tiff("Perchlorate_NHANES_LogTrans_Graph_Review_Update.tiff", units="in", width=10, height=5, res=300) #Only to save in high def.
+ggplot(All_Data) +
+  geom_point(aes(x = Sample_ID, y = Result_P_ng_mL, shape = as.factor(Site), fill = as.factor(Site)), size = 2)+
+  scale_y_continuous(trans='log10')+
+  scale_shape_manual(name = "Recruitment Site",
+                       values = c(15, 2, 21),
+                       labels = c("CSF", "RCBH", "YRMC"))+
+  scale_fill_manual(name = "Recruitment Site",
+                      values = setNames(point_fill_data$color, point_fill_data$label))+
+  geom_hline(data = hline_data2, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2)+
+  xlab("")+
+  ylab("Urinary Perchlorate\n")+
+  #labs(shape = "Recruitment Site", labels = c("1"="CSF", "2"="RCBH", "3"="YRMC"),
+  #     fill = "Recruitment Site",  labels = c("1"="CSF", "2"="RCBH", "3"="YRMC"))+
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000"))+
+  scale_linetype_manual(name = "Perchlorate Levels",
+                        values = c(1, 2, 5),
+                        labels = c("EPA Health Advisory Limit", "National Median", "Sample Median"))+
+  scale_color_manual(name = "Perchlorate Levels",
+                     values = setNames(hline_data2$color, hline_data2$label))+
+  guides(linetype = guide_legend(title = "Perchlorate Levels"),
+         color = guide_legend(title = "Perchlorate Levels"),
+         fill = guide_legend(title = "Recruitment Site"),
+         shape = guide_legend(title = "Recruitment Site"))
+dev.off()
+
+
+
+
+hline_data3 <- data.frame(
+  yintercept = c(2.33, 2.56),
+  label = c("National Average", "Sample Average"),
+  color = c("firebrick", "forestgreen")
+)
+
+tiff("Perch_Creat_NHANES_LogTrans_Graph_Review_Updated.tiff", units="in", width=10, height=7, res=300) #Only to save in high def.
+ggplot(All_Data) +
+  geom_point(aes(x = Sample_ID, y = Result_P_ug_mL/Result_C_g_mL, shape = as.factor(Site), fill = as.factor(Site)), size = 2)+
+  scale_shape_manual(name = "Recruitment Site",
+                     values = c(15, 2, 21),
+                     labels = c("CSF", "RCBH", "YRMC"))+
+  scale_fill_manual(name = "Recruitment Site",
+                    values = setNames(point_fill_data$color, point_fill_data$label))+
+  geom_hline(data = hline_data3, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2)+
+  scale_y_continuous(trans='log10',  
+                       breaks = trans_breaks("log10", function(x)  10^x, n =  5),  
+                       labels = trans_format("log10", math_format(10^.x))) +
+  xlab("")+
+  ylab("Log Perchlorate/Creatinine\n")+
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000"))+
+  scale_linetype_manual(name = "Perchlorate Levels",
+                        values = c(2, 5),
+                        labels = c("National Average", "Sample Average"))+
+  scale_color_manual(name = "Perchlorate Levels",
+                     values = setNames(hline_data3$color, hline_data3$label))+
+  guides(linetype = guide_legend(title = "Perchlorate Levels"),
+         color = guide_legend(title = "Perchlorate Levels"),
+         fill = guide_legend(title = "Recruitment Site"),
+         shape = guide_legend(title = "Recruitment Site"))
+dev.off()
+
+
+ggplot(All_Data) +
+  geom_boxplot(aes(y = Result_P_ng_mL/Result_C_ng_mL, x=as.factor(Site)))+
+  geom_jitter(aes(y = Result_P_ng_mL/Result_C_ng_mL, x=as.factor(Site)), alpha=0.2)+
+  geom_hline(data = hline_data3, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2)+
+  scale_y_continuous(trans='log10',  
+                       breaks = trans_breaks("log10", function(x)  10^x, n =  5),  
+                       labels = trans_format("log10", math_format(10^.x))) +
+  xlab("")+
+  ylab("Log Perchlorate/Creatinine\n")+
+  theme(panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000"))+
+  scale_linetype_manual(name = "Perchlorate Levels",
+                        values = c(2, 5),
+                        labels = c("National Average", "Sample Average"))+
+  scale_color_manual(name = "Perchlorate Levels",
+                     values = setNames(hline_data3$color, hline_data3$label))+
+  guides(linetype = guide_legend(title = "Perchlorate Levels"),
+         color = guide_legend(title = "Perchlorate Levels"))
+
+tiff("Perch_Creat_NHANES_LogTrans_Graph2_Review_Update.tiff", units="in", width=10, height=7, res=300) #Only to save in high def.
+ggplot(All_Data, aes(y = Result_P_ug_mL/Result_C_g_mL, x=as.factor(Site))) +
+    geom_violin(color='#ffffff')+
+  geom_boxplot()+
+  geom_sina(alpha=0.2)+
+  geom_hline(data = hline_data3, aes(yintercept = yintercept, linetype = label, color = label), size = 2)+
+  scale_y_continuous(trans='log10',  
+                       breaks = trans_breaks("log10", function(x)  10^x, n =  5),  
+                       labels = trans_format("log10", math_format(10^.x))) +
+  xlab("")+
+  ylab("Log Perchlorate/Creatinine\n")+
+  theme(panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000"))+
+  scale_linetype_manual(name = "",
+                        values = c(2, 5),
+                        labels = c("National Average", "Sample Average"))+
+  scale_color_manual(name = "",
+                     values = setNames(hline_data3$color, hline_data3$label))+
+  guides(linetype = guide_legend(title = ""),
+         color = guide_legend(title = ""))+
+    scale_x_discrete(labels = c("1" = "CSF", "2" = "RCBH", "3" = "YRMC"))
+dev.off()
+
+#Stats tests for weighted values...
+#t.test(x=log10(All_Data$Result_P_ng_mL), mu=mean(log10(NHANES$URXUP8), na.rm = T), conf.level = 0.95) - this was the original to base off of
+
+#Calculated already:
+weighted_mean 
+weighted_variance 
+weighted_std_dev
+sum_weights
+
+weighted_se <- sqrt(weighted_variance / sum_weights)
+
+sample_mean <- mean(All_Data$Result_P_ng_mL, na.rm=T)
+sample_se <- sqrt(var(All_Data$Result_P_ng_mL, na.rm=T) / sum(!is.na(All_Data$Result_P_ng_mL)))
+
+t_stat <- (sample_mean - weighted_mean) / 
+          sqrt(sample_se^2 + weighted_se^2)
+
+df <- (sample_se^2 + weighted_se^2)^2 / 
+      (sample_se^4 / (295^2 * (295 - 1)) + 
+       weighted_se^4 / sum_weights)
+
+p_value <- 2 * pt(abs(t_stat), df = df, lower.tail = FALSE) #0.1076875
+
+#Creatinine
+#t.test(x=log10(All_Data$Result_C_mg_dL), mu=mean(log10(NHANES$URXUCR), na.rm = T), conf.level = 0.95)
+
+#URXUCR units mg/dL
+
+#Didn't do earlier so doing now.
+weighted_mean_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$URXUCR
+sum_weighted_creat <- sum(weighted_mean_creat)
+sum_weights_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
+
+weighted_mean_creat <- sum_weighted_creat/sum_weights_creat
+weighted_variance_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR * (adult_data_NHANES2018_Creat$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
+weighted_std_dev_creat <- sqrt(weighted_variance_creat)
+sum_weights
+
+
+weighted_se_creat <- sqrt(weighted_variance_creat / sum_weights)
+
+sample_mean_creat <- mean(All_Data$Result_C_mg_dL, na.rm=T)
+sample_se_creat <- sqrt(var(All_Data$Result_C_mg_dL, na.rm=T) / sum(!is.na(All_Data$Result_C_mg_dL)))
+
+t_stat_creat <- (sample_mean_creat - weighted_mean_creat) / 
+          sqrt(sample_se_creat^2 + weighted_se_creat^2)
+
+df_creat <- (sample_se_creat^2 + weighted_se_creat^2)^2 / 
+      (sample_se_creat^4 / (294^2 * (294 - 1)) + 
+       weighted_se_creat^4 / sum_weights)
+
+p_value_creat <- 2 * pt(abs(t_stat_creat), df = df_creat, lower.tail = FALSE) #0.8945176
+
+#Finally for creatinine-corrected perchlorate:
+#t.test(x=log10(All_Data$Result_P_ng_mL/All_Data$Result_C_ng_mL), mu=mean(log10(NHANES$URXUP8/NHANES$URXUCR), na.rm = T), conf.level = 0.95) - reference
+
+weighted_perch_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$Creat_Corr_Perch
+sum_weighted_perch_creat <- sum(weighted_perch_creat)
+sum_weights_perch_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
+
+weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_perch_creat #3.3381e-06
+
+weighted_variance_perch_creat <- sum(adult_data_NHANES$WTSA2YR * (adult_data_NHANES$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_perch_creat
+weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.692124
+
+
+
+weighted_se_perch_creat <- sqrt(weighted_variance_perch_creat / sum_weights_perch_creat)
+
+
+adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
+
+
+sample_mean_perch_creat <- mean(All_Data$Result_P_ng_mL/(All_Data$Result_C_mg_dL*10000), na.rm=T)
+sample_se_perch_creat <- sqrt(var(All_Data$Result_P_ng_mL/(All_Data$Result_C_mg_dL*10000), na.rm=T) / sum(!is.na(All_Data$Result_C_mg_dL)))
+
+t_stat_perch_creat <- (sample_mean_perch_creat - weighted_mean_perch_creat) / 
+          sqrt(sample_se_perch_creat^2 + weighted_se_perch_creat^2)
+
+df_perch_creat <- (sample_se_perch_creat^2 + weighted_se_perch_creat^2)^2 / 
+      (sample_se_perch_creat^4 / (294^2 * (294 - 1)) + 
+       weighted_se_perch_creat^4 / sum_weights) #sum_weights all the same
+
+p_value_perch_creat <- 2 * pt(abs(t_stat_perch_creat), df = df_perch_creat, lower.tail = FALSE) #0.9996575
+
+#Hispanic Subpopulation
+
+adult_data_NHANES2018_Creat$Ethnicity <- ifelse(adult_data_NHANES2018_Creat$RIDRETH1==1|
+                             adult_data_NHANES2018_Creat$RIDRETH1==2, 1,
+                           ifelse(adult_data_NHANES2018_Creat$RIDRETH1==3|
+                                    adult_data_NHANES2018_Creat$RIDRETH1==4, 2, 3)) #1 = Hispanic, 2 = Non-Hispanic, 3 = Don't know (Matches Yuma)
+
+AdultHispanic_NHANES <- subset(adult_data_NHANES2018_Creat, NHANES$Ethnicity==1) #427 observations
+
+AdultHispanic_NHANES <- subset(AdultHispanic_NHANES, !is.na(AdultHispanic_NHANES$URXUP8)) #No missing perch = 412
+
+AdultHispanic_NHANES <- subset(AdultHispanic_NHANES, !is.na(AdultHispanic_NHANES$URXUCR)) #No missing creat = 412
+
+#Going to do manually (n=412)
+weighted_perch <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$URXUP8
+sum_weighted_perch <- sum(weighted_perch)
+sum_weights <- sum(AdultHispanic_NHANES$WTSA2YR)
+
+weighted_mean <- sum_weighted_perch/sum_weights #3.310768
+#same value as weighted_stats, so that's good.
+#AdultHispanic_NHANES_WeightedPerch <- weighted_perch/sum_weights #Only for distribution, not for values.
+
+weighted_variance <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUP8 - weighted_mean)^2) / sum_weights
+weighted_std_dev <- sqrt(weighted_variance) #5.234052
+
+#Median: 
+sorted_NHANES_Perch <- AdultHispanic_NHANES[order(AdultHispanic_NHANES$URXUP8), ]
+
+# Calculate cumulative weights and values
+cum_weights <- cumsum(sorted_NHANES_Perch$WTSA2YR)
+cum_weighted_values <- cumsum(sorted_NHANES_Perch$WTSA2YR * sorted_NHANES_Perch$URXUP8)
+
+# Find the index where cumulative weights exceed half the total
+half_total_weights <- sum(sorted_NHANES_Perch$WTSA2YR) / 2
+median_index <- which(cum_weights >= half_total_weights)[1]
+
+# The weighted median is the URXUP8 value at this index
+weighted_median <- sorted_NHANES_Perch$URXUP8[median_index] #2.34
+
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_perch <- exp(sum(AdultHispanic_NHANES$WTSA2YR*log(AdultHispanic_NHANES$URXUP8))/sum(AdultHispanic_NHANES$WTSA2YR)) #2.31471
+
+#geoSD: 
+geosd_perch <- sqrt(exp(sum(AdultHispanic_NHANES$WTSA2YR * ((log(AdultHispanic_NHANES$URXUP8) - log(geomean))^2)) / sum(AdultHispanic_NHANES$WTSA2YR))) #1.410984
+
+#Now creatinine-corrected perchlorate:
+#merged_data_NHANES2018_Creat <- merge(AdultHispanic_NHANES, NHANES_Creat, by="SEQN")
+
+#adult_data_NHANES2018_Creat <- subset(merged_data_NHANES2018_Creat, merged_data_NHANES2018_Creat$RIDAGEYR >= 18)
+
+#adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUP8)) #No missing perch
+
+#adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUCR)) #No missing creat
+
+#adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
+
+#Going to do manually (n=412) for creatinine corrected perch.
+weighted_perch_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$Creat_Corr_Perch
+sum_weighted_perch_creat <- sum(weighted_perch_creat)
+sum_weights_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
+
+weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_creat #3.154574e-06
+
+weighted_variance_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_creat
+weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.19326
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_perch_creat <- exp(sum(AdultHispanic_NHANES$WTSA2YR*log(AdultHispanic_NHANES$Creat_Corr_Perch))/sum(AdultHispanic_NHANES$WTSA2YR)) #2.370437e-06
+
+#geoSD: 
+geosd_perch_creat <- sqrt(exp(sum(AdultHispanic_NHANES$WTSA2YR*((log(AdultHispanic_NHANES$Creat_Corr_Perch)-log(geomean_creat))^2))/sum(AdultHispanic_NHANES$WTSA2YR))) #1.279388
+
+#Going to do manually (n=412) for creatinine corrected perch.
+weighted_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$URXUCR
+sum_weighted_creat <- sum(weighted_creat)
+sum_weights_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
+
+weighted_mean_creat <- sum_weighted_creat/sum_weights_creat #122.7666
+
+weighted_variance_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
+weighted_std_dev_creat <- sqrt(weighted_variance_creat) #81.90321
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_creat <- exp(sum(AdultHispanic_NHANES$WTSA2YR*log(AdultHispanic_NHANES$URXUCR))/sum(AdultHispanic_NHANES$WTSA2YR)) #97.64905
+
+#geoSD: 
+sqrt(exp(sum(AdultHispanic_NHANES$WTSA2YR*((log(AdultHispanic_NHANES$URXUCR)-log(geomean_creat))^2))/sum(AdultHispanic_NHANES$WTSA2YR))) #1.289995
+
+
+#Hispanic Viz
+hline_data_M <- data.frame(
+  yintercept = c(15, 3.31, 3.095675),
+  label = c("Interim Health Advisory Limit", "Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"),
+  color = c("blue", "firebrick", "forestgreen")
+)
+
+
+tiff("Perchlorate_NHANES_Graph_MatchedDemog_Reviewer_Update.tiff", units="in", width=10, height=5, res=300) #Only to save in high def.
+ggplot(All_Data) +
+  geom_point(aes(x = Sample_ID, y = Result_P_ng_mL, shape = as.factor(Site), fill = as.factor(Site)), size = 2) +
+  scale_shape_manual(name = "Recruitment Site",
+                     values = c(15, 2, 21),
+                     labels = c("CSF", "RCBH", "YRMC"))+
+  scale_fill_manual(name = "Recruitment Site",
+                      values = setNames(point_fill_data$color, point_fill_data$label))+
+  geom_hline(data = hline_data_M, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2) +
+  xlab("") +
+  ylab("Urinary Perchlorate (ng/mL)\n") +
+  labs(shape = "Recruitment Site", labels = c("1" = "CSF", "2" = "RCBH", "3" = "YRMC")) +
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000")) +
+  scale_linetype_manual(
+    name = "Perchlorate Levels",
+    values = c(1, 2, 5),
+    labels = c("Interim Health Advisory Limit", "Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average")) +
+  scale_color_manual(name = "Perchlorate Levels",
+                     values = setNames(hline_data_M$color, hline_data_M$label)) +
+  guides(linetype = guide_legend(title = "Perchlorate Levels"),
+         color = guide_legend(title = "Perchlorate Levels"),
+         fill = guide_legend(title = "Recruitment Site"),
+         shape = guide_legend(title = "Recruitment Site"))
+dev.off()
+
+
+hline_data2_M <- data.frame(
+  yintercept = c(15, 2.31471, 2.322191), #Replaced 2.138199 with weighted geom average for P8, 2.31471
+  label = c("EPA Health Advisory Limit", "Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"),
+  color = c("blue", "firebrick", "forestgreen")
+)
+
+tiff("Perchlorate_NHANES_Hisp_LogTrans_Graph_Reviewer_Update.tiff", units="in", width=10, height=5, res=300) #Only to save in high def.
+ggplot(All_Data) +
+  geom_point(aes(x = Sample_ID, y = Result_P_ng_mL, shape = as.factor(Site), fill = as.factor(Site)), size = 2) +
+  scale_shape_manual(name = "Recruitment Site",
+                     values = c(15, 2, 21),
+                     labels = c("CSF", "RCBH", "YRMC"))+
+  scale_fill_manual(name = "Recruitment Site",
+                      values = setNames(point_fill_data$color, point_fill_data$label))+
+  scale_y_continuous(trans='log10')+
+  geom_hline(data = hline_data2_M, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2) +
+  xlab("") +
+  ylab("Log10 Urinary Perchlorate\n") +
+  labs(shape = "Recruitment Site", labels = c("1" = "CSF", "2" = "RCBH", "3" = "YRMC")) +
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000")) +
+  scale_linetype_manual(
+    name = "Perchlorate Levels",
+    values = c(1, 2, 5),
+    labels = c("EPA Health Advisory Limit", "Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average")) +
+  scale_color_manual(name = "Perchlorate Levels",
+                     values = setNames(hline_data2_M$color, hline_data2_M$label)) +
+  guides(linetype = guide_legend(title = "Perchlorate Levels"),
+         color = guide_legend(title = "Perchlorate Levels"),
+         fill = guide_legend(title = "Recruitment Site"),
+         shape = guide_legend(title = "Recruitment Site"))
+dev.off()
+
+
+
+hline_data3_M <- data.frame(
+  yintercept = c(2.370, 2.52), #Geomean replaced with weighted geomean
+  label = c("Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"),
+  color = c("firebrick", "forestgreen")
+)
+
+tiff("Perch_Creat_NHANES_Hisp__LogTrans_Graph_Reviewer_Update.tiff", units="in", width=10, height=7, res=300) #Only to save in high def.
+ggplot(Sampled_All_Data) +
+  geom_point(aes(x = Sample_ID, y = Result_P_ng_mL/Result_C_ng_mL, shape = as.factor(Site), fill = as.factor(Site)), size = 2)+
+  scale_shape_manual(name = "Recruitment Site",
+                       values = c(15, 2, 21),
+                       labels = c("CSF", "RCBH", "YRMC"))+
+  scale_fill_manual(name = "Recruitment Site",
+                      values = setNames(point_fill_data$color, point_fill_data$label))+
+  geom_hline(data = hline_data3_M, aes(yintercept = yintercept, linetype = label, color = label), size = 1.2)+
+  scale_y_continuous(trans='log10',  
+                       breaks = trans_breaks("log10", function(x)  10^x, n =  5),  
+                       labels = trans_format("log10", math_format(10^.x))) +
+  xlab("")+
+  ylab("Log Perchlorate/Creatinine\n")+
+  theme(axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000"))+
+  scale_linetype_manual(name = "Perchlorate Levels",
+                        values = c(2, 5),
+                        labels = c("Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"))+
+  scale_color_manual(name = "Perchlorate Levels",
+                     values = setNames(hline_data3_M$color, hline_data3_M$label))+
+  guides(linetype = guide_legend(title = "Perchlorate Levels"),
+         color = guide_legend(title = "Perchlorate Levels"),
+         fill = guide_legend(title = "Recruitment Site"),
+         shape = guide_legend(title = "Recruitment Site"))
+dev.off()
+
+hline_data3_M <- data.frame(
+  yintercept = c(2.370, 2.52), 
+  label = c("Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"),
+  color = c("firebrick", "forestgreen")
+)
+
+tiff("Perch_Creat_NHANES_Hisp__LogTrans_Graph2_Reviewer_Update.tiff", units="in", width=10, height=7, res=300) #Only to save in high def.
+ggplot(Sampled_All_Data, aes(y = Result_P_ug_mL/Result_C_g_mL, x=as.factor(Site))) +
+    geom_violin(color='#ffffff')+
+  geom_boxplot()+
+  geom_sina(alpha=0.2)+
+  geom_hline(data = hline_data3_M, aes(yintercept = yintercept, linetype = label, color = label), size = 2)+
+  scale_y_continuous(trans='log10',  
+                       breaks = trans_breaks("log10", function(x)  10^x, n =  5),  
+                       labels = trans_format("log10", math_format(10^.x))) +
+  xlab("")+
+  ylab("Log Perchlorate/Creatinine\n")+
+  theme(panel.background = element_rect(fill = '#ffffff'),
+        text = element_text(size = 20),
+        axis.line = element_line(color="#000000"))+
+  scale_linetype_manual(name = "",
+                        values = c(2, 5),
+                        labels = c("Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"))+
+  scale_color_manual(name = "",
+                     values = setNames(hline_data3_M$color, hline_data3_M$label))+
+  guides(linetype = guide_legend(title = ""),
+         color = guide_legend(title = ""))+
+    scale_x_discrete(labels = c("1" = "CSF", "2" = "RCBH", "3" = "YRMC"))
+dev.off()
+
+## T-tests for Hispanic Subgroup
+
+#Stats tests for weighted values...
+#t.test(x=log10(All_Data$Result_P_ng_mL), mu=mean(log10(NHANES$URXUP8), na.rm = T), conf.level = 0.95) - this was the original to base off of
+
+#Calculated already:
+weighted_mean 
+weighted_variance 
+weighted_std_dev
+sum_weights
+
+weighted_se <- sqrt(weighted_variance / sum_weights)
+
+sample_mean <- mean(Sampled_All_Data$Result_P_ng_mL, na.rm=T)
+sample_se <- sqrt(var(Sampled_All_Data$Result_P_ng_mL, na.rm=T) / sum(!is.na(Sampled_All_Data$Result_P_ng_mL)))
+
+t_stat <- (sample_mean - weighted_mean) / 
+          sqrt(sample_se^2 + weighted_se^2)
+
+df <- (sample_se^2 + weighted_se^2)^2 / 
+      (sample_se^4 / (295^2 * (295 - 1)) + 
+       weighted_se^4 / sum_weights)
+
+p_value <- 2 * pt(abs(t_stat), df = df, lower.tail = FALSE) #0.4675781
+
+#Creatinine
+#t.test(x=log10(Sampled_All_Data$Result_C_mg_dL), mu=mean(log10(NHANES$URXUCR), na.rm = T), conf.level = 0.95)
+
+#URXUCR units mg/dL
+
+#Didn't do earlier so doing now.
+weighted_mean_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$URXUCR
+sum_weighted_creat <- sum(weighted_mean_creat)
+sum_weights_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
+
+weighted_mean_creat <- sum_weighted_creat/sum_weights_creat
+weighted_variance_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
+weighted_std_dev_creat <- sqrt(weighted_variance_creat)
+sum_weights
+
+
+weighted_se_creat <- sqrt(weighted_variance_creat / sum_weights)
+
+sample_mean_creat <- mean(Sampled_All_Data$Result_C_mg_dL, na.rm=T)
+sample_se_creat <- sqrt(var(Sampled_All_Data$Result_C_mg_dL, na.rm=T) / sum(!is.na(Sampled_All_Data$Result_C_mg_dL)))
+
+t_stat_creat <- (sample_mean_creat - weighted_mean_creat) / 
+          sqrt(sample_se_creat^2 + weighted_se_creat^2)
+
+df_creat <- (sample_se_creat^2 + weighted_se_creat^2)^2 / 
+      (sample_se_creat^4 / (294^2 * (294 - 1)) + 
+       weighted_se_creat^4 / sum_weights)
+
+p_value_creat <- 2 * pt(abs(t_stat_creat), df = df_creat, lower.tail = FALSE) #0.7823231
+
+#Finally for creatinine-corrected perchlorate:
+#t.test(x=log10(Sampled_All_Data$Result_P_ng_mL/Sampled_All_Data$Result_C_ng_mL), mu=mean(log10(NHANES$URXUP8/NHANES$URXUCR), na.rm = T), conf.level = 0.95) - reference
+
+weighted_perch_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$Creat_Corr_Perch
+sum_weighted_perch_creat <- sum(weighted_perch_creat)
+sum_weights_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
+
+weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_perch_creat #3.154574e-06
+
+weighted_variance_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_perch_creat
+weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.19326
+
+
+
+weighted_se_perch_creat <- sqrt(weighted_variance_perch_creat / sum_weights_perch_creat)
+
+
+#adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
+
+
+sample_mean_perch_creat <- mean(Sampled_All_Data$Result_P_ng_mL/(Sampled_All_Data$Result_C_mg_dL*10000), na.rm=T)
+sample_se_perch_creat <- sqrt(var(Sampled_All_Data$Result_P_ng_mL/(Sampled_All_Data$Result_C_mg_dL*10000), na.rm=T) / sum(!is.na(Sampled_All_Data$Result_C_mg_dL)))
+
+t_stat_perch_creat <- (sample_mean_perch_creat - weighted_mean_perch_creat) / 
+          sqrt(sample_se_perch_creat^2 + weighted_se_perch_creat^2)
+
+df_perch_creat <- (sample_se_perch_creat^2 + weighted_se_perch_creat^2)^2 / 
+      (sample_se_perch_creat^4 / (294^2 * (294 - 1)) + 
+       weighted_se_perch_creat^4 / sum_weights) #sum_weights all the same
+
+p_value_perch_creat <- 2 * pt(abs(t_stat_perch_creat), df = df_perch_creat, lower.tail = FALSE) #0.9999783
+
+```
+### Perchlorate against Measured BMI
+```{r perch_bmi_measured}
+
+ggplot(All_Data, aes(x=log10(Result_P_ng_mL/Result_C_ng_mL), y=log10(bmi)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  theme(legend.position = "none",
+        panel.background = element_rect(fill="#ffffff"),
+        axis.text.x=element_text(angle=60, hjust=1),
+        axis.line = element_line(color="#000000"))+
+  xlab("Perchlorate/Creatinine (ng/mL)")+
+  ylab("Logtransformed Measured BMI (kg/m2)")
+
+ggplot(All_Data, aes(x=log10(Result_P_ng_mL), y=log10(bmi)))+
+  geom_point()+
+  geom_smooth(method=lm, se=F)+
+  theme(legend.position = "none",
+        panel.background = element_rect(fill="#ffffff"),
+        axis.text.x=element_text(angle=60, hjust=1),
+        axis.line = element_line(color="#000000"))+
+  xlab("Log10 Perchlorate/Creatinine")+
+  ylab("Log10 BMI")
+
+perch_bmi_creat <- lm(log10(bmi)~log10(Result_P_ng_mL)+log10(Result_C_mg_dL), All_Data)
+
+avPlots(perch_bmi_creat)
+
+perch_bmi_creat2 <- lm(log10(bmi)~log10(Result_P_ng_mL)+log10(Result_C_mg_dL), All_Data)
+
+avPlots(perch_bmi_creat2)
 ```
 
 ```{r some_graphs}
@@ -1841,6 +2618,22 @@ ggplot(data=subset(All_Data, !is.na(All_Data$Gender)), aes(y=log10(Result_P_ng_m
         text = element_text(size = 20))
 dev.off()
 
+tiff("Smoking_Perch_Creat.tiff", units="in", width=9, height=6, res=300) #Only to save in high def.
+ggplot(data=All_Data, aes(y=Result_P_ng_mL/Result_C_ng_mL, x=as.factor(Smoking_Status)))+
+  geom_boxplot(aes(fill=as.factor(Smoking_Status)))+
+  geom_jitter(size=0.6)+
+  scale_fill_discrete("Smoking Status", labels=c("1"="Previous", "2"="Light/Occasional", "3"="Current/Heavy", "0"="Never"))+
+  xlab("")+
+  ylab("Log [Perchlorate / Creatinine]\n")+
+  scale_y_continuous(trans='log10',
+                     labels = scientific_format())+
+  theme(panel.background = element_rect(fill="#ffffff"),
+        axis.line = element_line(color="#000000"),
+        text = element_text(size = 20),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+dev.off()
+
 ggplot(data=All_Data, aes(x=log10(Result_P_ng_mL/Result_C_ng_mL), y=log10(TSH)))+
   geom_point()+
   geom_smooth(method = lm)+
@@ -1891,21 +2684,17 @@ dev.off()
 
 #Are these stat. diff.
 Model1_Test <- lm(log10(Result_P_ng_mL)~log10(TSH), data = All_Data)
-summary(Model1_Test)
 Model2_Test <- lm(log10(Result_P_ng_mL)~log10(TSH), subset(All_Data, All_Data$thyroid_med == 0))
-summary(Model2_Test)
 #lrtest(Model1_Test, Model2_Test) different sample sizes
 #anova(Model1_Test, Model2_Test) doesn't work either
-cor.test(log10(All_Data$Result_P_ng_mL), log10(All_Data$TSH), method = 'pearson')
 
-
-All_Data_No_Meds <- subset(All_Data, All_Data$thyroid_med == 0)
-cor.test(log10(All_Data_No_Meds$Result_P_ng_mL), log10(All_Data_No_Meds$TSH), method = 'pearson')
 #Need to ask Dr. Furlong how to do this.
+
 #This is not really the same thing, but eh:
 lmtest <- lm(log10(Result_P_ng_mL) ~ thyroid_med*log10(TSH), data = All_Data)
 
 summary(lmtest)
+
 #If these aren't different, then overall is not different.
 ```
 
@@ -2023,6 +2812,88 @@ ggplot(data=subset(All_Data, !is.na(All_Data$Hypo_D)), aes(y=log10(as.numeric(Re
         axis.ticks = element_blank(),
         axis.line = element_line(color="#000000"))
 
+#metals against perch.
+Cd_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(as.numeric(Cd111))))+
+  ylab("")+
+  xlab("Log10 Cd")+
+  geom_point()+
+  geom_smooth(method=lm, se=F)
+
+Cu_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(as.numeric(Cu65))))+
+  ylab("")+
+  xlab("Log10 Cu")+
+  geom_point()+
+  geom_smooth(method=lm, se=F)
+
+Hg_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(as.numeric(Hg202))))+
+  ylab("Log10 Perchlorate / Creatinine")+
+  xlab("Log10 Hg")+
+  geom_point()+
+  geom_smooth(method=lm, se=F)
+
+Mn_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(as.numeric(Mn55))))+
+  ylab("")+
+  xlab("Log10 Mn")+
+  geom_point()+
+  geom_smooth(method=lm, se=F)
+
+Pb_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(as.numeric(Pb208))))+
+  ylab("")+
+  xlab("Log10 Pb")+
+  geom_point()+
+  geom_smooth(method=lm, se=F)
+
+U_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(as.numeric(U238))))+
+  ylab("")+
+  xlab("Log10 U")+
+  geom_point()+
+  geom_smooth(method=lm, se=F)
+
+grid.arrange(Cd_Perch, Cu_Perch, Hg_Perch, Mn_Perch, Pb_Perch, U_Perch)
+
+#Perchlorate against PC1 and PC2
+PC1_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=FAC1_1))+
+  ylab("")+
+  xlab("PC1")+
+  geom_point()
+
+PC2_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=FAC2_1))+
+  ylab("")+
+  xlab("PC2")+
+  geom_point()
+
+grid.arrange(PC1_Perch, PC2_Perch, left="Log10 Perchlorate / Creatinine")
+
+PC1_Perch2 <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)), x=FAC1_1))+
+  ylab("")+
+  xlab("PC1")+
+  geom_point()
+
+PC2_Perch2 <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)), x=FAC2_1))+
+  ylab("")+
+  xlab("PC2")+
+  geom_point()
+
+grid.arrange(PC1_Perch2, PC2_Perch2, left="Log10 Perchlorate")
+
+#Heavy loaders of PC1: Mn, Pb, Cu
+Mn_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(Mn55)))+
+  ylab("")+
+  xlab("Log10[Mn]")+
+  geom_point()
+
+Pb_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(Pb208)))+
+  ylab("")+
+  xlab("Log10[Pb]")+
+  geom_point()
+
+
+Cu_Perch <- ggplot(data=All_Data, aes(y=log10(as.numeric(Result_P_ng_mL)/as.numeric(Result_C_mg_dL)), x=log10(Cu65)))+
+  ylab("")+
+  xlab("Log10[Cu]")+
+  geom_point()
+
+grid.arrange(Mn_Perch, Pb_Perch, Cu_Perch, left="Log10 Perchlorate / Creatinine", ncol=3)
 ```
 
 ```{r MANCOVA}
@@ -2788,7 +3659,7 @@ ggplot(data=All_Data, aes(y=log10(Result_P_ng_mL)))+
 ```
 
 ```{r corr_matrices}
-df_corr_thyroid <- All_Data[ , c("Result_C_mg_dL","Result_C_ng_mL","Result_P_ng_mL","fT3","TSH","fT4","TotalT4","TotalT3","Cortisol","any_thyroid_problem_dummy","Hyper_D","Hypo_D","Thyroid_cancer_D","Goiter_D","pos","emr_thyroid_problem","emr_hyperthyroidism","emr_hypothyroidism","emr_thyroid_cancer","emr_goiter","EMR_any_thyroid_Dummy")]
+df_corr_thyroid <- All_Data[ , c("Result_C_mg_dL","Result_C_ng_mL","Result_P_ng_mL","fT3","TSH","fT4","TotalT4","TotalT3","Cortisol","any_thyroid_problem_dummy","Hyper_D","Hypo_D","Thyroid_cancer_D","Goiter_D","pos_recode","emr_thyroid_problem","emr_hyperthyroidism","emr_hypothyroidism","emr_thyroid_cancer","emr_goiter","emr_cancer","emr_diabetes","EMR_any_thyroid_Dummy")]
 
 df_corr_thyroid <- as.data.frame(df_corr_thyroid)
 
@@ -2829,7 +3700,7 @@ sum(complete.cases(df_perch_horm)) #There are 159, again use pairwise cases.
 cor_perch_horm <- cor(df_perch_horm, use="pairwise.complete.obs")
 p_values_horm <- corr.test(cor_perch_horm)
 
-#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+setwd("~/Desktop/Yuma Project/Yuma - R Project/")
 write.csv(cor_thy, file="Correlation_HealthOutcomes_Final.csv", quote=F, row.names=T)
 write.csv(cor_perch_horm, file="Correlation_Perch_Hormones_BMI_Final.csv", quote=F, row.names=T)
 
@@ -2854,14 +3725,16 @@ sum(complete.cases(df_perch_horm2)) #There are 278, again use pairwise cases.
 cor_perch_horm2 <- cor(df_perch_horm2, use="pairwise.complete.obs")
 p_values_horm2 <- corr.test(df_perch_horm2)
 
-#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+setwd("~/Desktop/Yuma Project/Yuma - R Project/")
 write.csv(cor_perch_horm2, file="Correlations_Final.csv", quote=F, row.names=T)
+
+
 ```
 
 
 ```{r corr_matrices_gender}
 
-df_corr_thyroid2 <- All_Data[ , c("Gender","Result_C_mg_dL","Result_C_ng_mL","Result_P_ng_mL","fT3","TSH","fT4","TotalT4","TotalT3","Cortisol","any_thyroid_problem_dummy","Hyper_D","Hypo_D","Thyroid_cancer_D","Goiter_D","pos","emr_thyroid_problem","emr_hyperthyroidism","emr_hypothyroidism","emr_thyroid_cancer","emr_goiter","EMR_any_thyroid_Dummy")]
+df_corr_thyroid2 <- All_Data[ , c("Gender","Result_C_mg_dL","Result_C_ng_mL","Result_P_ng_mL","fT3","TSH","fT4","TotalT4","TotalT3","Cortisol","any_thyroid_problem_dummy","Hyper_D","Hypo_D","Thyroid_cancer_D","Goiter_D","pos_recode","emr_thyroid_problem","emr_hyperthyroidism","emr_hypothyroidism","emr_thyroid_cancer","emr_goiter","emr_cancer","emr_diabetes","EMR_any_thyroid_Dummy")]
 
 df_corr_thyroid2 <- as.data.frame(df_corr_thyroid2)
 
@@ -2926,25 +3799,94 @@ p_values_horm2 <- corr.test(cor_perch_horm2)
 
 hist(All_Data$age)
 
-
+#Smoking may interact with perchlorate levels to affect thyroid function, so I will test smoking as a modifier variable using likelihood ratio tests, with an interaction threshold set at p < 0.05. 
 #I will test explanatory variables included in the model for correlations with one another using variance inflation factor (VIF) tests, and if highly correlated (VIF > 2) only one of those that are related will be chosen for model inclusion.
 
+#Looking at effect modification for smoking just to verify
+model1_adj_sm0 <- glm(Hypo_D ~ log10(Result_P_ng_mL), data=All_Data, subset = (Smoking_Status == "0"), family="binomial")
+model1_adj_sm1 <- glm(Hypo_D ~ log10(Result_P_ng_mL), data=All_Data, subset = (Smoking_Status == "1"), family="binomial")
+model1_adj_sm2 <- glm(Hypo_D ~ log10(Result_P_ng_mL), data=All_Data, subset = (Smoking_Status == "2"), family="binomial")
+model1_adj_sm3 <- glm(Hypo_D ~ log10(Result_P_ng_mL), data=All_Data, subset = (Smoking_Status == "3"), family="binomial")
+summary(model1_adj_sm0) #There are 239 DoF - OR for Perch: 1.47
+summary(model1_adj_sm1) #There are only 21 DoF - OR for Perch: 2.04
+summary(model1_adj_sm2) #There are only 2 DoF - OR for Perch: 0.002 #This is not super meaningful with low numbers.
+summary(model1_adj_sm3) #NA - 0 DoF
+
+#Can do ever smokers vs never smokers
+model1_adj_sm0 <- glm(Hypo_D ~ log10(Result_P_ng_mL), data=All_Data, subset = (Smoking_Status == "0"), family="binomial")
+model1_adj_sm1 <- glm(Hypo_D ~ log10(Result_P_ng_mL), data=All_Data, subset = (Smoking_Status == "1" | Smoking_Status == "2" | Smoking_Status == "3"), family="binomial")
+summary(model1_adj_sm0) #There are 239 DoF - OR for Perch: 1.47
+summary(model1_adj_sm1) #There are only 25 DoF - OR for Perch: 1.81
+#18.9% difference
+
+All_Data$Ever_Smoker <- ifelse(All_Data$Smoking_Status==0, 0, 
+                               ifelse(All_Data$Smoking_Status == "1" | 
+                                        All_Data$Smoking_Status == "2" | 
+                                        All_Data$Smoking_Status == "3", 1, NA))
+
+All_Data$Current_Smoker_D <- ifelse(All_Data$Smoking_Status==0 | 
+                                      All_Data$Smoking_Status == "1", 0, 
+                               ifelse(All_Data$Smoking_Status == "2" | 
+                                        All_Data$Smoking_Status == "3", 1, NA))
+
+model1_adj_withint <- glm(Hypo_D ~ log10(Result_P_ng_mL)*Ever_Smoker + log10(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+summary(model1_adj_withint)
+
+model1_adj_withint <- glm(Hypo_D ~ log10(Result_P_ng_mL)*Ever_Smoker + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+summary(model1_adj_withint)
+
+model1_adj_withint <- glm(Hypo_D ~ log10(Result_P_ng_mL)*as.factor(Smoking_Status) + log10(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+summary(model1_adj_withint)
+
+model1_adj_withint <- glm(Hypo_D ~ log10(Result_P_ng_mL)*as.factor(Smoking_Status) + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+summary(model1_adj_withint)
+
+model1_adj_withint <- glm(Hypo_D ~ log10(Result_P_ng_mL)*Current_Smoker_D + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+summary(model1_adj_withint)
+#Gender and age interaction does not appear significant, and smoking status (for ever vs never smokers, for current vs non-current smokers, and for never, prior, light, and heavy) and perchlorate do not meet the threshold (not even close). Could be because of the very low number of smokers in our cohort? I will remove Gender*age and remove all types of smoking*perchlorate.
+
+model1_adj2 <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=(subset(All_Data, All_Data$Site!=1)), family="binomial") #General model with no interactions and not including CSF
+summary(model1_adj2)
+ 
+model1_adj3 <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial") #Checking gender and age interaction, does not meet threshold.
+summary(model1_adj3)
+
+model1_adj4 <- glm(Hypo_D ~ log(Result_P_ng_mL)*age + log(Result_C_mg_dL) + Gender  + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial") #int significant between age and perchlorate.
+summary(model1_adj4)
+
+model1_adj4 <- glm(Hypo_D ~ log(Result_P_ng_mL)*age + log(Result_C_mg_dL) + Gender  + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial") #int significant between age and perchlorate.
+summary(model1_adj4)
+
+#Smoking status*perch and gender*age are not significant. As such, will not keep in model. However, perch*age is sign. Can't find any biological justification for keeping perch*age, though.
+
+model1_adj5 <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all) + as.factor(Income), data=All_Data, family="binomial")
+summary(model1_adj5) #Income not sig.
+
+model1_adj6 <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all) + bmi, data=All_Data, family="binomial")
+summary(model1_adj6) #bmi not sig.
+
+model1_adj7 <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all) + as.factor(Income) + bmi, data=All_Data, family="binomial")
+summary(model1_adj7) #Adding Income and bmi were not sig... Won't add them to save some powah. I also didn't include them a priori, so I probably shouldn't force the model to be something it isn't like some toxic, constantly disappointed mom.
 
 #What if I do division creatinine correction instead of adding as covariate?
-model1_adj <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model1_adj <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj)
 
-model1_adj8 <- glm(Hypo_D ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model1_adj8 <- glm(Hypo_D ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj8)
 
-#The CDC in their models just keep creatinine as a covariate, and so that's also what I will do, too.
+#Not good. The CDC in their models just keep creatinine as a covariate, and so that's also what I will do, too.
 
 #Quick checks
-#model1_adj <- glm(SR_EMR_Hypothyroid ~ log(Result_P_ng_mL)*Water_all +log(Result_C_mg_dL) + Gender + Ethnicity + Site + age, data=(subset(All_Data, All_Data$Site!=1))) #No interaction with perchlorate and water.
+#model1_adj <- glm(SR_EMR_Hypothyroid ~ log(Result_P_ng_mL)*Water_all +log(Result_C_mg_dL) + Gender + Ethnicity + Site + Smoking_Status + age, data=(subset(All_Data, All_Data$Site!=1))) #No interaction with perchlorate and water.
 
+#model1_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) + age +log10(Result_C_mg_dL) + Gender + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data) #Interaction between perchlorate and age. #Categorize age to see which age group is driving.
+
+#Because of the very low number of smokers, I am grouping people into ever vs never.
 
 #Checking referent categories
 levels(as.factor(All_Data$Site))
+levels(as.factor(All_Data$Ever_Smoker)) #won't use due to inconsistent data collection
 levels(as.factor(All_Data$Water_all))
 levels(as.factor(All_Data$Ethnicity))
 
@@ -2954,7 +3896,7 @@ summary(model1_unadj)
 exp(0.4006)
 exp(confint(model1_unadj))
 
-model1_adj <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model1_adj <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + Ever_Smoker + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj)
 exp(confint(model1_adj))
 
@@ -2967,7 +3909,7 @@ summary(model1_unadj_NoCSF)
 exp(0.5197)
 exp(confint(model1_unadj_NoCSF))
 
-model1_adj_NoCSF <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
+model1_adj_NoCSF <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Ever_Smoker + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(model1_adj_NoCSF)
 exp(confint(model1_adj_NoCSF))
 
@@ -2996,7 +3938,7 @@ summary(model2_unadj)
 exp(0.2493)
 exp(confint(model2_unadj))
 
-model2_adj <- glm(emr_hypothyroidism ~ log10(Result_P_ng_mL) + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model2_adj <- glm(emr_hypothyroidism ~ log10(Result_P_ng_mL) + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + Ever_Smoker + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model2_adj)
 exp(confint(model2_adj))
 
@@ -3015,7 +3957,7 @@ summary(model3_unadj)
 exp(0.4995)
 exp(confint(model3_unadj))
 
-model3_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model3_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + Ever_Smoker + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model3_adj)
 exp(confint(model3_adj))
 
@@ -3025,7 +3967,7 @@ summary(model3_unadj_NoCSF)
 exp(0.6792)
 exp(confint(model3_unadj_NoCSF))
 
-model3_adj_NoCSF <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + Site + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
+model3_adj_NoCSF <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Ever_Smoker + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(model3_adj_NoCSF)
 exp(confint(model3_adj_NoCSF))
 
@@ -3037,26 +3979,30 @@ exp(confint(model3_adj_NoCSF))
 #summary(model3_unadj)
 #exp(confint(model3_unadj))
 
-test_model <- glm(SR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
+test_model <- glm(SR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Ever_Smoker) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(test_model)
 
-#model3_adj <- glm(SR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Water_all, data=All_Data)
+#Neither gender/age nor smoking/perchlorate seem to have a significant interaction. Will remove smoking/perchlorate to see if that changes things for gender/age.
+
+#model3_adj <- glm(SR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data)
 #summary(model3_adj)
 #exp(confint(model3_adj))
+#Smoking status and gender*age are nearly significant. As such, will keep in model.
 
 ##EMR Thyroid Problems Model
 #model4_unadj <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL), data=All_Data)
 #summary(model4_unadj)
 #exp(confint(model4_unadj))
 
-#model4_adj_withint <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Water_all, data=All_Data)
+#model4_adj_withint <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Smoking_Status + Smoking_Status*log(Result_P_ng_mL) + Water_all, data=All_Data)
 #summary(model4_adj_withint)
+#Neither gender/age nor smoking/perchlorate seem to have a significant interaction. Will remove smoking/perchlorate to see if that changes things for gender/age.
 
-#model4_adj_withint <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Water_all, data=All_Data)
+#model4_adj_withint <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data)
 #summary(model4_adj_withint)
 #Gender/age still not significant for interaction. Will remove from this model.
 
-#model4_adj <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Water_all, data=All_Data)
+#model4_adj <- glm(EMR_hypo_goit_canc ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data)
 #summary(model4_adj)
 #exp(confint(model4_adj))
 
@@ -3086,7 +4032,7 @@ summary(model1_unadj)
 exp(0.4006)
 exp(confint(model1_unadj))
 
-model1_adj <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
+model1_adj <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + Ever_Smoker + as.factor(Water_all_revised), data=All_Data, family="binomial")
 summary(model1_adj)
 exp(confint(model1_adj))
 
@@ -3099,7 +4045,7 @@ summary(model1_unadj_NoCSF)
 exp(0.5197)
 exp(confint(model1_unadj_NoCSF))
 
-model1_adj_NoCSF <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Site!=1), family="binomial")
+model1_adj_NoCSF <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Ever_Smoker + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(model1_adj_NoCSF)
 exp(confint(model1_adj_NoCSF))
 
@@ -3125,7 +4071,7 @@ summary(model2_unadj)
 exp(0.2493)
 exp(confint(model2_unadj))
 
-model2_adj <- glm(emr_hypothyroidism ~ log10(Result_P_ng_mL) + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
+model2_adj <- glm(emr_hypothyroidism ~ log10(Result_P_ng_mL) + log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + Ever_Smoker + as.factor(Water_all_revised), data=All_Data, family="binomial")
 summary(model2_adj)
 exp(confint(model2_adj))
 
@@ -3144,7 +4090,7 @@ summary(model3_unadj)
 exp(0.4995)
 exp(confint(model3_unadj))
 
-model3_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
+model3_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + Ever_Smoker + as.factor(Water_all_revised), data=All_Data, family="binomial")
 summary(model3_adj)
 exp(confint(model3_adj))
 
@@ -3154,7 +4100,7 @@ summary(model3_unadj_NoCSF)
 exp(0.6792)
 exp(confint(model3_unadj_NoCSF))
 
-model3_adj_NoCSF <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + Site + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Site!=1), family="binomial")
+model3_adj_NoCSF <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Ever_Smoker + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(model3_adj_NoCSF)
 exp(confint(model3_adj_NoCSF))
 
@@ -3317,7 +4263,7 @@ hline_data_Dose <- data.frame(
     color = c("darkred")
 )
 
-tiff("Perch_Dose2.tiff", units="in", width=15, height=5, res=300) #Only to save in high def.
+tiff("Perch_Dose2.tiff", units="in", width=8, height=5, res=300) #Only to save in high def.
 ggplot(data=All_Data, aes(y=Daily_Dose2, x=ID))+
   geom_jitter(aes(shape=as.factor(Site), fill=as.factor(Site)))+
   geom_hline(data=hline_data_Dose, aes(yintercept = yintercept, linetype = label, color = label))+
@@ -3357,41 +4303,22 @@ I am now going to update my models/code to incorporate these suggestions to bett
 #any_thyroid_problem_dummy, emr_thyroid_problem_fromothercolumns - just pulling for easy reference
 
 #Smoking variable was not collected in the health survey, and only extracted from EMRs. Therefore, I will not use the smoking variable in our models.
-
 #I will test explanatory variables included in the model for correlations with one another using variance inflation factor (VIF) tests, and if highly correlated (VIF > 2) only one of those that are related will be chosen for model inclusion.
+
  
-model_adj1_sex_age <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial") 
-summary(model_adj1_sex_age) #Checking gender and age interaction, does not meet threshold (p=0.254).
+model1_adj3 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial") 
+summary(model1_adj3) #Checking gender and age interaction, does not meet threshold.
 
-model_adj2_sex_age <- glm(emr_thyroid_problem_fromothercolumns ~ log10(Result_P_ng_mL) + log10(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model_adj2_sex_age) #Checking gender and age interaction, does not meet threshold (p=0.697).
-
-model_adj3_sex_age <- glm(any_thyroid_Dummy_EMR_or_SR ~ log10(Result_P_ng_mL) +log10(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model_adj3_sex_age) #Checking gender and age interaction, does not meet threshold (p=0.911).
-
-
-#Requested by reviewers (November 25, 2024):
-#Checking gender and perchlorate exposure interaction
-model_adj1_perch_sex <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL)*Gender + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial") 
-summary(model_adj1_perch_sex) #Checking gender and perch interaction, does not meet threshold (p=0.802).
-
-model_adj2_perch_sex <- glm(emr_thyroid_problem_fromothercolumns ~ log10(Result_P_ng_mL)*Gender + log10(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model_adj2_perch_sex) #Checking gender and perch interaction, does not meet threshold (p=0.581).
-
-model_adj3_perch_sex <- glm(any_thyroid_Dummy_EMR_or_SR ~ log10(Result_P_ng_mL)*Gender +log10(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model_adj3_perch_sex) #Checking gender and perch interaction, does not meet threshold (p=0.726).
-
-
-#model1_adj4 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL)*age + log(Result_C_mg_dL) + Gender  + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial") 
+#model1_adj4 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL)*age + log(Result_C_mg_dL) + Gender  + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial") 
 #summary(model1_adj4) #int significant between age and perchlorate, but no biological justification for this.
 
-#model1_adj4 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL)*age + log(Result_C_mg_dL) + Gender  + Ethnicity + as.factor(Site) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial") 
+#model1_adj4 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL)*age + log(Result_C_mg_dL) + Gender  + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial") 
 #summary(model1_adj4) #int significant between age and perchlorate, but again, testing out of curiosity instead of from literature, so won't include.
 
-#model1_adj5 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all) + as.factor(Income), data=All_Data, family="binomial")
+#model1_adj5 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all) + as.factor(Income), data=All_Data, family="binomial")
 #summary(model1_adj5) #Income sig. Need better groups. 
 
-model1_adj5 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all) + as.factor(Below_Pov), data=All_Data, family="binomial")
+model1_adj5 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj5) #Very close to sig (p=0.06), but since it does not meet the threshold, I will hold and not include.
 
 model1_adj6 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all) + bmi, data=All_Data, family="binomial")
@@ -3401,24 +4328,25 @@ model1_adj7 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_
 summary(model1_adj7) #Adding Income and bmi were not sig... Won't add them to save some powah. I also didn't include them a priori, so I probably shouldn't force the model to be something it isn't. "I'm not a normal mom, I'm a cool mom."
 
 #What if I do division creatinine correction instead of adding as covariate?
-#Also requested to include by reviewers (Nov 25, 2024)
-model1_adj <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model1_adj <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj)
 
-model1_adj8 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
+model1_adj8 <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Smoking_Status) + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj8)
 
-#The CDC in their models just kept creatinine as a covariate, and so that's what I will do, too. That's also what Ben Blount recommended when we last spoke.
+#Not good. The CDC in their models just kept creatinine as a covariate, and so that's also what I will do, too. That's also what Ben Blount recommended when we last spoke.
 
 #Quick checks
-#model1_adj <- glm(SR_EMR_Hypothyroid ~ log(Result_P_ng_mL)*Water_all +log(Result_C_mg_dL) + Gender + Ethnicity + Site + age, data=(subset(All_Data, All_Data$Site!=1))) #No interaction with perchlorate and water.
+#model1_adj <- glm(SR_EMR_Hypothyroid ~ log(Result_P_ng_mL)*Water_all +log(Result_C_mg_dL) + Gender + Ethnicity + Site + Smoking_Status + age, data=(subset(All_Data, All_Data$Site!=1))) #No interaction with perchlorate and water.
 
-#model1_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) + age +log10(Result_C_mg_dL) + Gender + Ethnicity + Site + Water_all, data=All_Data) #Interaction between perchlorate and age. #Categorize age to see which age group is driving.
+#model1_adj <- glm(SR_EMR_Hypothyroid ~ log10(Result_P_ng_mL) + age +log10(Result_C_mg_dL) + Gender + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data) #Interaction between perchlorate and age. #Categorize age to see which age group is driving.
+
+#Because of the very low number of smokers, I am grouping people into ever vs never.
 
 #Checking referent categories
 levels(as.factor(All_Data$Site))
 All_Data$Site <- C(All_Data$Site, contr.treatment, base=2)
-levels(as.factor(All_Data$Water_all_revised))
+levels(as.factor(All_Data$Water_all))
 levels(as.factor(All_Data$Ethnicity))
 
 ##Self-Report Thyroid Problem Model
@@ -3435,6 +4363,7 @@ model1_adj <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C
 summary(model1_adj)
 exp(confint(model1_adj))
 
+
 #Without CSF
 model1_unadj_NoCSF <- glm(any_thyroid_problem_dummy ~ log10(Result_P_ng_mL) + Gender + age + Ethnicity, data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(model1_unadj_NoCSF)
@@ -3445,28 +4374,8 @@ model1_adj_NoCSF <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Re
 summary(model1_adj_NoCSF)
 exp(confint(model1_adj_NoCSF))
 
-#Stratified by sex
-#1=Male, 2=Female
-#Males
-model1_adj_M <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Gender==1), family="binomial")
-summary(model1_adj_M)
-exp(confint(model1_adj_M))
 
-#Females
-model1_adj_F <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Gender==2), family="binomial")
-summary(model1_adj_F)
-exp(confint(model1_adj_F))
-
-#Looking at covariate-adjusted vs corrected perchlorate/creatinine:
-#What if I do division creatinine correction instead of adding as covariate?
-model1_adj <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model1_adj)
-exp(confint(model1_adj))
-
-model1_adj_corrected <- glm(any_thyroid_problem_dummy ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
-summary(model1_adj_corrected)
-
-#avPlots(model1_adj) #This isn't super helpful for non-continuous variables
+avPlots(model1_adj) #This isn't super helpful for non-continuous variables
 
 #Variance Inflation Factors
 vif(model1_adj)
@@ -3496,28 +4405,6 @@ exp(confint(model2_adj))
 
 #Don't need to remove CSF because CSF does not have EMRs.
 
-#Stratified by sex
-#1=Male, 2=Female
-#Males
-model2_adj_M <- glm(emr_thyroid_problem_fromothercolumns ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Gender==1), family="binomial")
-summary(model2_adj_M)
-exp(confint(model2_adj_M))
-
-#Females
-model2_adj_F <- glm(emr_thyroid_problem_fromothercolumns ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Gender==2), family="binomial")
-summary(model2_adj_F)
-exp(confint(model2_adj_F))
-
-#Looking at covariate-adjusted vs corrected perchlorate/creatinine:
-#What if I do division creatinine correction instead of adding as covariate?
-model2_adj <- glm(emr_thyroid_problem_fromothercolumns ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model2_adj)
-exp(confint(model2_adj))
-
-model2_adj_corrected <- glm(emr_thyroid_problem_fromothercolumns ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
-summary(model2_adj_corrected)
-
-
 #SR or EMR Any Thyroid Problem Model
 model3_unadj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log10(Result_P_ng_mL) + Gender + age + Ethnicity, data=All_Data, family="binomial")
 summary(model3_unadj)
@@ -3542,28 +4429,6 @@ model3_adj_NoCSF <- glm(any_thyroid_Dummy_EMR_or_SR ~ log10(Result_P_ng_mL) +log
 summary(model3_adj_NoCSF)
 exp(confint(model3_adj_NoCSF))
 
-#Stratified by sex
-#1=Male, 2=Female
-#Males
-model3_adj_M <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Gender==1), family="binomial")
-summary(model3_adj_M)
-exp(confint(model3_adj_M))
-
-#Females
-model3_adj_F <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=subset(All_Data, All_Data$Gender==2), family="binomial")
-summary(model3_adj_F)
-exp(confint(model3_adj_F))
-
-#Looking at covariate-adjusted vs corrected perchlorate/creatinine:
-#What if I do division creatinine correction instead of adding as covariate?
-model3_adj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all_revised), data=All_Data, family="binomial")
-summary(model3_adj)
-exp(confint(model3_adj))
-
-model3_adj_corrected <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL/Result_C_ng_mL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
-summary(model3_adj_corrected)
-
-
 sum(All_Data$Site!=1 & All_Data$any_thyroid_Dummy_EMR_or_SR==1, na.rm = T)
 sum(All_Data$Site!=1 & All_Data$any_thyroid_Dummy_EMR_or_SR==0, na.rm = T)
 
@@ -3578,26 +4443,30 @@ sum(All_Data$Site!=1 & All_Data$any_thyroid_problem_dummy==0, na.rm = T)
 #summary(model3_unadj)
 #exp(confint(model3_unadj))
 
-test_model <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
+test_model <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site) + as.factor(Ever_Smoker) + as.factor(Water_all), data=subset(All_Data, All_Data$Site!=1), family="binomial")
 summary(test_model)
 
-#model3_adj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Water_all, data=All_Data)
+#Neither gender/age nor smoking/perchlorate seem to have a significant interaction. Will remove smoking/perchlorate to see if that changes things for gender/age.
+
+#model3_adj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data)
 #summary(model3_adj)
 #exp(confint(model3_adj))
+#Smoking status and gender*age are nearly significant. As such, will keep in model.
 
 ##EMR Thyroid Problems Model
 #model4_unadj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL), data=All_Data)
 #summary(model4_unadj)
 #exp(confint(model4_unadj))
 
-#model4_adj_withint <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Water_all, data=All_Data)
+#model4_adj_withint <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Smoking_Status + Smoking_Status*log(Result_P_ng_mL) + Water_all, data=All_Data)
 #summary(model4_adj_withint)
+#Neither gender/age nor smoking/perchlorate seem to have a significant interaction. Will remove smoking/perchlorate to see if that changes things for gender/age.
 
-#model4_adj_withint <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Water_all, data=All_Data)
+#model4_adj_withint <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Gender*age + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data)
 #summary(model4_adj_withint)
 #Gender/age still not significant for interaction. Will remove from this model.
 
-#model4_adj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Water_all, data=All_Data)
+#model4_adj <- glm(any_thyroid_Dummy_EMR_or_SR ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + Site + Smoking_Status + Water_all, data=All_Data)
 #summary(model4_adj)
 #exp(confint(model4_adj))
 
@@ -3733,7 +4602,7 @@ p_values_horm_Cases <- corr.test(cor_perch_horm_Cases, use="pairwise")
 cor_perch_horm_Controls <- cor(df_perch_horm_Controls, use="pairwise.complete.obs")
 p_values_horm_Controls <- corr.test(cor_perch_horm_Controls, use="pairwise")
 
-#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+setwd("~/Desktop/Yuma Project/Yuma - R Project/")
 write.csv(cor_perch_horm_Cases, file="Correlation_Weight_Cases.csv", quote=F, row.names=T)
 write.csv(cor_perch_horm_Controls, file="Correlation_Weight_Controls.csv", quote=F, row.names=T)
 
@@ -4142,8 +5011,6 @@ ggplot(data=subset(All_Data, !is.na(All_Data$any_thyroid_problem_dummy)), aes(y=
 
 filtered_controls <- All_Data[All_Data$any_thyroid_Dummy_EMR_or_SR == 0, ] 
 filtered_controls <- filtered_controls[!is.na(filtered_controls$any_thyroid_Dummy_EMR_or_SR),] #n = 161
-filtered_controls <- filtered_controls[!is.na(filtered_controls$bmi),] #n = 161 still
-
 
 tiff("Perchlorate_PCOS_Controls_Graph.tiff", units="in", width=12, height=8, res=300) #Only to save in high def.
 ggplot(data=subset(filtered_controls, !is.na(filtered_controls$pos)), aes(y=Result_P_ug_mL/Result_C_g_mL))+
@@ -4203,11 +5070,6 @@ ggplot(data=filtered_controls, aes(x=Result_P_ug_mL/Result_C_g_mL, y=bmi))+
                        breaks = trans_breaks("log10", function(x)  10^x, n =  5),  
                        labels = trans_format("log10", math_format(10^.x)))
 dev.off()
-
-model_bmi_perch <- lm(log10(bmi)~log10(Result_P_ug_mL/Result_C_g_mL), data=filtered_controls)
-summary(model_bmi_perch)
-
-cor.test(log10(filtered_controls$bmi), log10(filtered_controls$Result_P_ug_mL/filtered_controls$Result_C_g_mL), method = 'pearson') 
 
 #EMR Obesity
 
@@ -4334,42 +5196,4 @@ All_Data %>%
 All_Data %>% 
   group_by(Site) %>% 
   summarise(n=sum(Farmer==1, na.rm = T)/sum(!is.na(Site)))
-```
-
-```{r final_counts_pearsons}
-All_Data_Perchlorate_Measured <- subset(All_Data, !is.na(All_Data$Result_P_ng_mL))
-All_Data_Perchlorate_Measured_and_Creatinine <- subset(All_Data_Perchlorate_Measured, !is.na(All_Data_Perchlorate_Measured$Result_C_mg_dL))
-
-#TSH
-sum(!is.na(All_Data_Perchlorate_Measured$TSH)) #290
-sum(!is.na(All_Data_Perchlorate_Measured_and_Creatinine$TSH)) #289
-
-#FT3
-sum(!is.na(All_Data_Perchlorate_Measured$fT3)) #294
-sum(!is.na(All_Data_Perchlorate_Measured_and_Creatinine$fT3)) #293
-
-#FT4
-sum(!is.na(All_Data_Perchlorate_Measured$fT4)) #291
-sum(!is.na(All_Data_Perchlorate_Measured_and_Creatinine$fT4)) #290
-
-#TT3
-sum(!is.na(All_Data_Perchlorate_Measured$TotalT3)) #291
-sum(!is.na(All_Data_Perchlorate_Measured_and_Creatinine$TotalT3)) #290
-
-#TT4
-sum(!is.na(All_Data_Perchlorate_Measured$TotalT4)) #292
-sum(!is.na(All_Data_Perchlorate_Measured_and_Creatinine$TotalT4)) #291
-
-#Cortisol
-sum(!is.na(All_Data_Perchlorate_Measured$Cortisol)) #288
-sum(!is.na(All_Data_Perchlorate_Measured_and_Creatinine$Cortisol)) #287
-
-
-#Counts:
-#sum(!is.na(All_Data_Perchlorate_Measured$TSH)) is 290
-
-All_Data_Perchlorate_Measured_TSH <- subset(All_Data_Perchlorate_Measured, !is.na(All_Data_Perchlorate_Measured$TSH))
-
-sum(All_Data_Perchlorate_Measured_TSH$thyroid_med==0) #168
-
 ```
