@@ -39,6 +39,7 @@ library(ggh4x)
 library(vcd)
 library(caret)
 library(ggforce)
+library(weights)
 
 #Setting WD
 setwd("~/Desktop/Yuma_Project/Yuma_R_Project/")
@@ -1727,15 +1728,26 @@ NHANES_Demo <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/DEMO_J.XPT")
 NHANES_Creat <- read_xpt("~/Desktop/Yuma_Project/Yuma_R_Project/ALB_CR_J.XPT")
 
 merged_data_NHANES2018 <- merge(NHANES_Perch, NHANES_Demo, by="SEQN")
-
+merged_data_NHANES2018 <- merge(merged_data_NHANES2018, NHANES_Creat, by="SEQN")
 adult_data_NHANES <- subset(merged_data_NHANES2018, RIDAGEYR >= 18)
 
-adult_data_NHANES <- subset(adult_data_NHANES, !is.na(adult_data_NHANES$URXUP8))
+adult_data_NHANES$Ethnicity <- ifelse(adult_data_NHANES$RIDRETH1==1|
+                             adult_data_NHANES$RIDRETH1==2, 1,
+                           ifelse(adult_data_NHANES$RIDRETH1==3|
+                                    adult_data_NHANES$RIDRETH1==4, 2, 3)) #1 = Hispanic, 2 = Non-Hispanic, 3 = Don't know (Matches Yuma)
+
+
+sum(!is.na(adult_data_NHANES$URXUP8))
+sum(!is.na(adult_data_NHANES$URXUCR))
+
+adult_data_NHANES_PERCH <- subset(adult_data_NHANES, !is.na(adult_data_NHANES$URXUP8))
+adult_data_NHANES_CREAT <- subset(adult_data_NHANES, !is.na(adult_data_NHANES$URXUCR))
+
 
 survey_design <- svydesign(
   id = ~1,
   weights = ~WTSA2YR, #Using the 2 year weights variable
-  data = adult_data_NHANES
+  data = adult_data_NHANES_PERCH
 )
 
 weighted_stats <- svymean(~URXUP8, design = survey_design)
@@ -1745,19 +1757,20 @@ weighted_mean <- svytotal(~URXUP8, design = survey_design)
 summary(weighted_mean) #Hm
 
 #Going to do manually (n=1791)
-weighted_perch <- adult_data_NHANES$WTSA2YR*adult_data_NHANES$URXUP8
+weighted_perch <- adult_data_NHANES_PERCH$WTSA2YR*adult_data_NHANES_PERCH$URXUP8
 sum_weighted_perch <- sum(weighted_perch)
-sum_weights <- sum(adult_data_NHANES$WTSA2YR)
+sum_weights <- sum(adult_data_NHANES_PERCH$WTSA2YR)
 
 weighted_mean <- sum_weighted_perch/sum_weights #3.342
 #same value as weighted_stats, so that's good.
 adult_data_NHANES_WeightedPerch <- weighted_perch/sum_weights #Only for distribution, not for values.
 
-weighted_variance <- sum(adult_data_NHANES$WTSA2YR * (adult_data_NHANES$URXUP8 - weighted_mean)^2) / sum_weights
+weighted_variance <- sum(adult_data_NHANES_PERCH$WTSA2YR * (adult_data_NHANES_PERCH$URXUP8 - weighted_mean)^2) / sum_weights
 weighted_std_dev <- sqrt(weighted_variance) #5.797566
 
 #Median: 
-sorted_NHANES_Perch <- adult_data_NHANES[order(adult_data_NHANES$URXUP8), ]
+sorted_NHANES_Perch <- adult_data_NHANES_PERCH[order(adult_data_NHANES_PERCH$URXUP8), ]
+median(sorted_NHANES_Perch$URXUP8) #2.22
 
 # Calculate cumulative weights and values
 cum_weights <- cumsum(sorted_NHANES_Perch$WTSA2YR)
@@ -1772,58 +1785,51 @@ weighted_median <- sorted_NHANES_Perch$URXUP8[median_index] #2.34
 
 
 #geomean = exp(sum(weights*log(perch))/sum(weights))
-geomean <- exp(sum(adult_data_NHANES$WTSA2YR*log(adult_data_NHANES$URXUP8))/sum(adult_data_NHANES$WTSA2YR)) #2.197
+geomean <- exp(sum(adult_data_NHANES_PERCH$WTSA2YR*log(adult_data_NHANES_PERCH$URXUP8))/sum(adult_data_NHANES_PERCH$WTSA2YR)) #2.197
 
 #geoSD: 
-sqrt(exp(sum(adult_data_NHANES$WTSA2YR * ((log(adult_data_NHANES$URXUP8) - log(geomean))^2)) / sum(adult_data_NHANES$WTSA2YR)))
+sqrt(exp(sum(adult_data_NHANES_PERCH$WTSA2YR * ((log(adult_data_NHANES_PERCH$URXUP8) - log(geomean))^2)) / sum(adult_data_NHANES_PERCH$WTSA2YR))) #1.477
+
+#Creatinine
+
+#Going to do manually (n=1809) for creatinine corrected perch.
+weighted_creat <- adult_data_NHANES_CREAT$WTSA2YR*adult_data_NHANES_CREAT$URXUCR
+sum_weighted_creat <- sum(weighted_creat)
+sum_weights_creat <- sum(adult_data_NHANES_CREAT$WTSA2YR)
+
+weighted_mean_creat <- sum_weighted_creat/sum_weights_creat #121.1058
+
+weighted_variance_creat <- sum(adult_data_NHANES_CREAT$WTSA2YR * (adult_data_NHANES_CREAT$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
+weighted_std_dev_creat <- sqrt(weighted_variance_creat) #80.87096
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_creat <- exp(sum(adult_data_NHANES_CREAT$WTSA2YR*log(adult_data_NHANES_CREAT$URXUCR))/sum(adult_data_NHANES_CREAT$WTSA2YR)) #95.55992
+
+#geoSD: 
+sqrt(exp(sum(adult_data_NHANES_CREAT$WTSA2YR*((log(adult_data_NHANES_CREAT$URXUCR)-log(geomean_creat))^2))/sum(adult_data_NHANES_CREAT$WTSA2YR))) #1.306614
+
 
 #Now creatinine-corrected perchlorate:
-merged_data_NHANES2018_Creat <- merge(merged_data_NHANES2018, NHANES_Creat, by="SEQN")
+#merged_data_NHANES2018_Creat <- merge(merged_data_NHANES2018, NHANES_Creat, by="SEQN")
 
-adult_data_NHANES2018_Creat <- subset(merged_data_NHANES2018_Creat, merged_data_NHANES2018_Creat$RIDAGEYR >= 18)
-
-adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUP8)) #No missing perch
-
-adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUCR)) #No missing creat
-
-adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
+adult_data_NHANES_PERCH_CREAT <- subset(adult_data_NHANES_PERCH, !is.na(adult_data_NHANES_PERCH$URXUCR)) #1790
+adult_data_NHANES_PERCH_CREAT$Creat_Corr_Perch <- adult_data_NHANES_PERCH_CREAT$URXUP8/(adult_data_NHANES_PERCH_CREAT$URXUCR*10000)
 
 #Going to do manually (n=1790) for creatinine corrected perch.
-weighted_perch_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$Creat_Corr_Perch
+weighted_perch_creat <- adult_data_NHANES_PERCH_CREAT$WTSA2YR*adult_data_NHANES_PERCH_CREAT$Creat_Corr_Perch
 sum_weighted_perch_creat <- sum(weighted_perch_creat)
-sum_weights_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
+sum_weights_creat <- sum(adult_data_NHANES_PERCH_CREAT$WTSA2YR)
 
 weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_creat #3.3381e-06
 
-weighted_variance_perch_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR * (adult_data_NHANES2018_Creat$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_creat
+weighted_variance_perch_creat <- sum(adult_data_NHANES_PERCH_CREAT$WTSA2YR * (adult_data_NHANES_PERCH_CREAT$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_creat
 weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.692114
 
 #geomean = exp(sum(weights*log(perch))/sum(weights))
-geomean_creat <- exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*log(adult_data_NHANES2018_Creat$Creat_Corr_Perch))/sum(adult_data_NHANES2018_Creat$WTSA2YR)) #2.326121e-06
+geomean_creat <- exp(sum(adult_data_NHANES_PERCH_CREAT$WTSA2YR*log(adult_data_NHANES_PERCH_CREAT$Creat_Corr_Perch))/sum(adult_data_NHANES_PERCH_CREAT$WTSA2YR)) #2.326121e-06
 
 #geoSD: 
-sqrt(exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*((log(adult_data_NHANES2018_Creat$Creat_Corr_Perch)-log(geomean_creat))^2))/sum(adult_data_NHANES2018_Creat$WTSA2YR))) #1.3287
-
-#Forgot to do creatinine, so coming back here to finish that...
-
-#Going to do manually (n=1790) for creatinine corrected perch.
-weighted_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$URXUCR
-sum_weighted_creat <- sum(weighted_creat)
-sum_weights_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
-
-weighted_mean_creat <- sum_weighted_creat/sum_weights_creat #119.2638
-
-weighted_variance_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR * (adult_data_NHANES2018_Creat$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
-weighted_std_dev_creat <- sqrt(weighted_variance_creat) #78.08952
-
-#geomean = exp(sum(weights*log(perch))/sum(weights))
-geomean_creat <- exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*log(adult_data_NHANES2018_Creat$URXUCR))/sum(adult_data_NHANES2018_Creat$WTSA2YR)) #94.47658
-
-#geoSD: 
-sqrt(exp(sum(adult_data_NHANES2018_Creat$WTSA2YR*((log(adult_data_NHANES2018_Creat$URXUCR)-log(geomean_creat))^2))/sum(adult_data_NHANES2018_Creat$WTSA2YR))) #1.306614
-
-
-
+sqrt(exp(sum(adult_data_NHANES_PERCH_CREAT$WTSA2YR*((log(adult_data_NHANES_PERCH_CREAT$Creat_Corr_Perch)-log(geomean_creat))^2))/sum(adult_data_NHANES_PERCH_CREAT$WTSA2YR))) #1.3287
 
 
 
@@ -1991,117 +1997,54 @@ ggplot(All_Data, aes(y = Result_P_ug_mL/Result_C_g_mL, x=as.factor(Site))) +
 dev.off()
 
 #Stats tests for weighted values...
-#t.test(x=log10(All_Data$Result_P_ng_mL), mu=mean(log10(NHANES$URXUP8), na.rm = T), conf.level = 0.95) - this was the original to base off of
+#I need to do with with the logtransformed data!
+wtd.t.test(x=log(All_Data$Result_P_ng_mL), y=log(adult_data_NHANES$URXUP8), weighty = adult_data_NHANES_PERCH$WTSA2YR, samedata = F) #p=0.516, two sample test - we want one sample
 
-#Calculated already:
-weighted_mean 
-weighted_variance 
-weighted_std_dev
-sum_weights
+weighted_geomean_perch <- weighted.mean(log(adult_data_NHANES_PERCH$URXUP8), 
+                                    w = adult_data_NHANES_PERCH$WTSA2YR, 
+                                    na.rm = TRUE)
 
-weighted_se <- sqrt(weighted_variance / sum_weights)
+t.test(x=log(All_Data$Result_P_ng_mL), mu=weighted_geomean_perch, alternative="two.sided", conf.level = 0.95) #p=0.4779
 
-sample_mean <- mean(All_Data$Result_P_ng_mL, na.rm=T)
-sample_se <- sqrt(var(All_Data$Result_P_ng_mL, na.rm=T) / sum(!is.na(All_Data$Result_P_ng_mL)))
-
-t_stat <- (sample_mean - weighted_mean) / 
-          sqrt(sample_se^2 + weighted_se^2)
-
-df <- (sample_se^2 + weighted_se^2)^2 / 
-      (sample_se^4 / (295^2 * (295 - 1)) + 
-       weighted_se^4 / sum_weights)
-
-p_value <- 2 * pt(abs(t_stat), df = df, lower.tail = FALSE) #0.1076875
 
 #Creatinine
-#t.test(x=log10(All_Data$Result_C_mg_dL), mu=mean(log10(NHANES$URXUCR), na.rm = T), conf.level = 0.95)
 
 #URXUCR units mg/dL
+weighted_geomean_creat <- weighted.mean(log(adult_data_NHANES_CREAT$URXUCR), 
+                                    w = adult_data_NHANES_CREAT$WTSA2YR, 
+                                    na.rm = TRUE)
 
-#Didn't do earlier so doing now.
-weighted_mean_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$URXUCR
-sum_weighted_creat <- sum(weighted_mean_creat)
-sum_weights_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
-
-weighted_mean_creat <- sum_weighted_creat/sum_weights_creat
-weighted_variance_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR * (adult_data_NHANES2018_Creat$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
-weighted_std_dev_creat <- sqrt(weighted_variance_creat)
-sum_weights
-
-
-weighted_se_creat <- sqrt(weighted_variance_creat / sum_weights)
-
-sample_mean_creat <- mean(All_Data$Result_C_mg_dL, na.rm=T)
-sample_se_creat <- sqrt(var(All_Data$Result_C_mg_dL, na.rm=T) / sum(!is.na(All_Data$Result_C_mg_dL)))
-
-t_stat_creat <- (sample_mean_creat - weighted_mean_creat) / 
-          sqrt(sample_se_creat^2 + weighted_se_creat^2)
-
-df_creat <- (sample_se_creat^2 + weighted_se_creat^2)^2 / 
-      (sample_se_creat^4 / (294^2 * (294 - 1)) + 
-       weighted_se_creat^4 / sum_weights)
-
-p_value_creat <- 2 * pt(abs(t_stat_creat), df = df_creat, lower.tail = FALSE) #0.8945176
+t.test(x=log(All_Data$Result_C_mg_dL), mu=weighted_geomean_creat, alternative="two.sided", conf.level = 0.95) #p=0.1483
 
 #Finally for creatinine-corrected perchlorate:
-#t.test(x=log10(All_Data$Result_P_ng_mL/All_Data$Result_C_ng_mL), mu=mean(log10(NHANES$URXUP8/NHANES$URXUCR), na.rm = T), conf.level = 0.95) - reference
+weighted_geomean_perch_creat <- weighted.mean(log(adult_data_NHANES_PERCH_CREAT$Creat_Corr_Perch), 
+                                    w = adult_data_NHANES_PERCH_CREAT$WTSA2YR, 
+                                    na.rm = TRUE)
 
-weighted_perch_creat <- adult_data_NHANES2018_Creat$WTSA2YR*adult_data_NHANES2018_Creat$Creat_Corr_Perch
-sum_weighted_perch_creat <- sum(weighted_perch_creat)
-sum_weights_perch_creat <- sum(adult_data_NHANES2018_Creat$WTSA2YR)
-
-weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_perch_creat #3.3381e-06
-
-weighted_variance_perch_creat <- sum(adult_data_NHANES$WTSA2YR * (adult_data_NHANES$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_perch_creat
-weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.692124
-
-
-
-weighted_se_perch_creat <- sqrt(weighted_variance_perch_creat / sum_weights_perch_creat)
-
-
-adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
-
-
-sample_mean_perch_creat <- mean(All_Data$Result_P_ng_mL/(All_Data$Result_C_mg_dL*10000), na.rm=T)
-sample_se_perch_creat <- sqrt(var(All_Data$Result_P_ng_mL/(All_Data$Result_C_mg_dL*10000), na.rm=T) / sum(!is.na(All_Data$Result_C_mg_dL)))
-
-t_stat_perch_creat <- (sample_mean_perch_creat - weighted_mean_perch_creat) / 
-          sqrt(sample_se_perch_creat^2 + weighted_se_perch_creat^2)
-
-df_perch_creat <- (sample_se_perch_creat^2 + weighted_se_perch_creat^2)^2 / 
-      (sample_se_perch_creat^4 / (294^2 * (294 - 1)) + 
-       weighted_se_perch_creat^4 / sum_weights) #sum_weights all the same
-
-p_value_perch_creat <- 2 * pt(abs(t_stat_perch_creat), df = df_perch_creat, lower.tail = FALSE) #0.9996575
+t.test(x=log(All_Data$Result_P_ng_mL/(All_Data$Result_C_mg_dL*10000)), mu=weighted_geomean_perch_creat, alternative="two.sided") #p-value = 0.01237
 
 #Hispanic Subpopulation
 
-adult_data_NHANES2018_Creat$Ethnicity <- ifelse(adult_data_NHANES2018_Creat$RIDRETH1==1|
-                             adult_data_NHANES2018_Creat$RIDRETH1==2, 1,
-                           ifelse(adult_data_NHANES2018_Creat$RIDRETH1==3|
-                                    adult_data_NHANES2018_Creat$RIDRETH1==4, 2, 3)) #1 = Hispanic, 2 = Non-Hispanic, 3 = Don't know (Matches Yuma)
+adult_data_NHANES_PERCH_Hisp <- subset(adult_data_NHANES_PERCH, adult_data_NHANES_PERCH$Ethnicity==1) #416 observations
 
-AdultHispanic_NHANES <- subset(adult_data_NHANES2018_Creat, NHANES$Ethnicity==1) #427 observations
+adult_data_NHANES_CREAT_Hisp <- subset(adult_data_NHANES_CREAT, adult_data_NHANES_CREAT$Ethnicity==1) #418 observations
 
-AdultHispanic_NHANES <- subset(AdultHispanic_NHANES, !is.na(AdultHispanic_NHANES$URXUP8)) #No missing perch = 412
+adult_data_NHANES_PERCH_CREAT_Hisp <- subset(adult_data_NHANES_PERCH_CREAT, adult_data_NHANES_PERCH_CREAT$Ethnicity==1) #415 observations
 
-AdultHispanic_NHANES <- subset(AdultHispanic_NHANES, !is.na(AdultHispanic_NHANES$URXUCR)) #No missing creat = 412
 
-#Going to do manually (n=412)
-weighted_perch <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$URXUP8
+#Going to do manually (n=416)
+weighted_perch <- adult_data_NHANES_PERCH_Hisp$WTSA2YR*adult_data_NHANES_PERCH_Hisp$URXUP8
 sum_weighted_perch <- sum(weighted_perch)
-sum_weights <- sum(AdultHispanic_NHANES$WTSA2YR)
+sum_weights <- sum(adult_data_NHANES_PERCH_Hisp$WTSA2YR)
 
-weighted_mean <- sum_weighted_perch/sum_weights #3.310768
-#same value as weighted_stats, so that's good.
-#AdultHispanic_NHANES_WeightedPerch <- weighted_perch/sum_weights #Only for distribution, not for values.
+weighted_mean <- sum_weighted_perch/sum_weights #3.231
 
-weighted_variance <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUP8 - weighted_mean)^2) / sum_weights
-weighted_std_dev <- sqrt(weighted_variance) #5.234052
+weighted_variance <- sum(adult_data_NHANES_PERCH_Hisp$WTSA2YR * (adult_data_NHANES_PERCH_Hisp$URXUP8 - weighted_mean)^2) / sum_weights
+weighted_std_dev <- sqrt(weighted_variance) #6.026
 
 #Median: 
-sorted_NHANES_Perch <- AdultHispanic_NHANES[order(AdultHispanic_NHANES$URXUP8), ]
+sorted_NHANES_Perch <- adult_data_NHANES_PERCH_Hisp[order(adult_data_NHANES_PERCH_Hisp$URXUP8), ]
+median(sorted_NHANES_Perch$URXUP8) #2.14
 
 # Calculate cumulative weights and values
 cum_weights <- cumsum(sorted_NHANES_Perch$WTSA2YR)
@@ -2112,58 +2055,50 @@ half_total_weights <- sum(sorted_NHANES_Perch$WTSA2YR) / 2
 median_index <- which(cum_weights >= half_total_weights)[1]
 
 # The weighted median is the URXUP8 value at this index
-weighted_median <- sorted_NHANES_Perch$URXUP8[median_index] #2.34
+weighted_median <- sorted_NHANES_Perch$URXUP8[median_index] #2.14
 
 
 #geomean = exp(sum(weights*log(perch))/sum(weights))
-geomean_perch <- exp(sum(AdultHispanic_NHANES$WTSA2YR*log(AdultHispanic_NHANES$URXUP8))/sum(AdultHispanic_NHANES$WTSA2YR)) #2.31471
+geomean <- exp(sum(adult_data_NHANES_PERCH_Hisp$WTSA2YR*log(adult_data_NHANES_PERCH_Hisp$URXUP8))/sum(adult_data_NHANES_PERCH_Hisp$WTSA2YR)) #2.103#############
 
 #geoSD: 
-geosd_perch <- sqrt(exp(sum(AdultHispanic_NHANES$WTSA2YR * ((log(AdultHispanic_NHANES$URXUP8) - log(geomean))^2)) / sum(AdultHispanic_NHANES$WTSA2YR))) #1.410984
+sqrt(exp(sum(adult_data_NHANES_PERCH_Hisp$WTSA2YR * ((log(adult_data_NHANES_PERCH_Hisp$URXUP8) - log(geomean))^2)) / sum(adult_data_NHANES_PERCH_Hisp$WTSA2YR))) #1.461##############
 
-#Now creatinine-corrected perchlorate:
-#merged_data_NHANES2018_Creat <- merge(AdultHispanic_NHANES, NHANES_Creat, by="SEQN")
+#Creatinine
 
-#adult_data_NHANES2018_Creat <- subset(merged_data_NHANES2018_Creat, merged_data_NHANES2018_Creat$RIDAGEYR >= 18)
-
-#adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUP8)) #No missing perch
-
-#adult_data_NHANES2018_Creat <- subset(adult_data_NHANES2018_Creat, !is.na(adult_data_NHANES2018_Creat$URXUCR)) #No missing creat
-
-#adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
-
-#Going to do manually (n=412) for creatinine corrected perch.
-weighted_perch_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$Creat_Corr_Perch
-sum_weighted_perch_creat <- sum(weighted_perch_creat)
-sum_weights_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
-
-weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_creat #3.154574e-06
-
-weighted_variance_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_creat
-weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.19326
-
-#geomean = exp(sum(weights*log(perch))/sum(weights))
-geomean_perch_creat <- exp(sum(AdultHispanic_NHANES$WTSA2YR*log(AdultHispanic_NHANES$Creat_Corr_Perch))/sum(AdultHispanic_NHANES$WTSA2YR)) #2.370437e-06
-
-#geoSD: 
-geosd_perch_creat <- sqrt(exp(sum(AdultHispanic_NHANES$WTSA2YR*((log(AdultHispanic_NHANES$Creat_Corr_Perch)-log(geomean_creat))^2))/sum(AdultHispanic_NHANES$WTSA2YR))) #1.279388
-
-#Going to do manually (n=412) for creatinine corrected perch.
-weighted_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$URXUCR
+#Going to do manually (n=418) for creatinine corrected perch.
+weighted_creat <- adult_data_NHANES_CREAT_Hisp$WTSA2YR*adult_data_NHANES_CREAT_Hisp$URXUCR
 sum_weighted_creat <- sum(weighted_creat)
-sum_weights_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
+sum_weights_creat <- sum(adult_data_NHANES_CREAT_Hisp$WTSA2YR)
 
-weighted_mean_creat <- sum_weighted_creat/sum_weights_creat #122.7666
+weighted_mean_creat <- sum_weighted_creat/sum_weights_creat #125.41
 
-weighted_variance_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
-weighted_std_dev_creat <- sqrt(weighted_variance_creat) #81.90321
+weighted_variance_creat <- sum(adult_data_NHANES_CREAT_Hisp$WTSA2YR * (adult_data_NHANES_CREAT_Hisp$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
+weighted_std_dev_creat <- sqrt(weighted_variance_creat) #77.79
 
 #geomean = exp(sum(weights*log(perch))/sum(weights))
-geomean_creat <- exp(sum(AdultHispanic_NHANES$WTSA2YR*log(AdultHispanic_NHANES$URXUCR))/sum(AdultHispanic_NHANES$WTSA2YR)) #97.64905
+geomean_creat <- exp(sum(adult_data_NHANES_CREAT_Hisp$WTSA2YR*log(adult_data_NHANES_CREAT_Hisp$URXUCR))/sum(adult_data_NHANES_CREAT_Hisp$WTSA2YR)) #100.59###########
 
 #geoSD: 
-sqrt(exp(sum(AdultHispanic_NHANES$WTSA2YR*((log(AdultHispanic_NHANES$URXUCR)-log(geomean_creat))^2))/sum(AdultHispanic_NHANES$WTSA2YR))) #1.289995
+sqrt(exp(sum(adult_data_NHANES_CREAT_Hisp$WTSA2YR*((log(adult_data_NHANES_CREAT_Hisp$URXUCR)-log(geomean_creat))^2))/sum(adult_data_NHANES_CREAT_Hisp$WTSA2YR))) #1.297########
 
+
+#Going to do manually (n=415) for creatinine corrected perch.
+weighted_perch_creat <- adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR*adult_data_NHANES_PERCH_CREAT_Hisp$Creat_Corr_Perch
+sum_weighted_perch_creat <- sum(weighted_perch_creat)
+sum_weights_creat <- sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR)
+
+weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_creat #2.91809e-06
+
+weighted_variance_perch_creat <- sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR * (adult_data_NHANES_PERCH_CREAT_Hisp$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_creat
+weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.846
+
+#geomean = exp(sum(weights*log(perch))/sum(weights))
+geomean_perch_creat <- exp(sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR*log(adult_data_NHANES_PERCH_CREAT_Hisp$Creat_Corr_Perch))/sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR)) #2.1095-06
+
+#geoSD: 
+sqrt(exp(sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR*((log(adult_data_NHANES_PERCH_CREAT_Hisp$Creat_Corr_Perch)-log(geomean_perch_creat))^2))/sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR))) #1.3229
+############################COME BACK HERE###############
 
 #Hispanic Viz
 hline_data_M <- data.frame(
@@ -2310,89 +2245,30 @@ dev.off()
 ## T-tests for Hispanic Subgroup
 
 #Stats tests for weighted values...
-#t.test(x=log10(All_Data$Result_P_ng_mL), mu=mean(log10(NHANES$URXUP8), na.rm = T), conf.level = 0.95) - this was the original to base off of
+#I need to do with with the logtransformed data!
+weighted_geomean_perch <- weighted.mean(log(adult_data_NHANES_PERCH_Hisp$URXUP8), 
+                                    w = adult_data_NHANES_PERCH_Hisp$WTSA2YR, 
+                                    na.rm = TRUE)
 
-#Calculated already:
-weighted_mean 
-weighted_variance 
-weighted_std_dev
-sum_weights
+t.test(x=log(Sampled_All_Data$Result_P_ng_mL), mu=weighted_geomean_perch, alternative="two.sided", conf.level = 0.95) #p=0.05942
 
-weighted_se <- sqrt(weighted_variance / sum_weights)
-
-sample_mean <- mean(Sampled_All_Data$Result_P_ng_mL, na.rm=T)
-sample_se <- sqrt(var(Sampled_All_Data$Result_P_ng_mL, na.rm=T) / sum(!is.na(Sampled_All_Data$Result_P_ng_mL)))
-
-t_stat <- (sample_mean - weighted_mean) / 
-          sqrt(sample_se^2 + weighted_se^2)
-
-df <- (sample_se^2 + weighted_se^2)^2 / 
-      (sample_se^4 / (295^2 * (295 - 1)) + 
-       weighted_se^4 / sum_weights)
-
-p_value <- 2 * pt(abs(t_stat), df = df, lower.tail = FALSE) #0.4675781
 
 #Creatinine
-#t.test(x=log10(Sampled_All_Data$Result_C_mg_dL), mu=mean(log10(NHANES$URXUCR), na.rm = T), conf.level = 0.95)
 
 #URXUCR units mg/dL
+weighted_geomean_creat <- weighted.mean(log(adult_data_NHANES_CREAT_Hisp$URXUCR), 
+                                    w = adult_data_NHANES_CREAT_Hisp$WTSA2YR, 
+                                    na.rm = TRUE)
 
-#Didn't do earlier so doing now.
-weighted_mean_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$URXUCR
-sum_weighted_creat <- sum(weighted_mean_creat)
-sum_weights_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
-
-weighted_mean_creat <- sum_weighted_creat/sum_weights_creat
-weighted_variance_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUCR - weighted_mean_creat)^2) / sum_weights_creat
-weighted_std_dev_creat <- sqrt(weighted_variance_creat)
-sum_weights
-
-
-weighted_se_creat <- sqrt(weighted_variance_creat / sum_weights)
-
-sample_mean_creat <- mean(Sampled_All_Data$Result_C_mg_dL, na.rm=T)
-sample_se_creat <- sqrt(var(Sampled_All_Data$Result_C_mg_dL, na.rm=T) / sum(!is.na(Sampled_All_Data$Result_C_mg_dL)))
-
-t_stat_creat <- (sample_mean_creat - weighted_mean_creat) / 
-          sqrt(sample_se_creat^2 + weighted_se_creat^2)
-
-df_creat <- (sample_se_creat^2 + weighted_se_creat^2)^2 / 
-      (sample_se_creat^4 / (294^2 * (294 - 1)) + 
-       weighted_se_creat^4 / sum_weights)
-
-p_value_creat <- 2 * pt(abs(t_stat_creat), df = df_creat, lower.tail = FALSE) #0.7823231
+t.test(x=log(Sampled_All_Data$Result_C_mg_dL), mu=weighted_geomean_creat, alternative="two.sided", conf.level = 0.95) #p=0.1147
 
 #Finally for creatinine-corrected perchlorate:
-#t.test(x=log10(Sampled_All_Data$Result_P_ng_mL/Sampled_All_Data$Result_C_ng_mL), mu=mean(log10(NHANES$URXUP8/NHANES$URXUCR), na.rm = T), conf.level = 0.95) - reference
+weighted_geomean_perch_creat <- weighted.mean(log(adult_data_NHANES_PERCH_CREAT_Hisp$Creat_Corr_Perch), 
+                                    w = adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR, 
+                                    na.rm = TRUE)
 
-weighted_perch_creat <- AdultHispanic_NHANES$WTSA2YR*AdultHispanic_NHANES$Creat_Corr_Perch
-sum_weighted_perch_creat <- sum(weighted_perch_creat)
-sum_weights_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR)
+t.test(x=log(Sampled_All_Data$Result_P_ng_mL/(All_Data$Result_C_mg_dL*10000)), mu=weighted_geomean_perch_creat, alternative="two.sided") #p-value = 0.01237
 
-weighted_mean_perch_creat <- sum_weighted_perch_creat/sum_weights_perch_creat #3.154574e-06
-
-weighted_variance_perch_creat <- sum(AdultHispanic_NHANES$WTSA2YR * (AdultHispanic_NHANES$URXUP8 - weighted_mean_perch_creat)^2) / sum_weights_perch_creat
-weighted_std_dev_perch_creat <- sqrt(weighted_variance_perch_creat) #6.19326
-
-
-
-weighted_se_perch_creat <- sqrt(weighted_variance_perch_creat / sum_weights_perch_creat)
-
-
-#adult_data_NHANES2018_Creat$Creat_Corr_Perch <- adult_data_NHANES2018_Creat$URXUP8/(adult_data_NHANES2018_Creat$URXUCR*10000)
-
-
-sample_mean_perch_creat <- mean(Sampled_All_Data$Result_P_ng_mL/(Sampled_All_Data$Result_C_mg_dL*10000), na.rm=T)
-sample_se_perch_creat <- sqrt(var(Sampled_All_Data$Result_P_ng_mL/(Sampled_All_Data$Result_C_mg_dL*10000), na.rm=T) / sum(!is.na(Sampled_All_Data$Result_C_mg_dL)))
-
-t_stat_perch_creat <- (sample_mean_perch_creat - weighted_mean_perch_creat) / 
-          sqrt(sample_se_perch_creat^2 + weighted_se_perch_creat^2)
-
-df_perch_creat <- (sample_se_perch_creat^2 + weighted_se_perch_creat^2)^2 / 
-      (sample_se_perch_creat^4 / (294^2 * (294 - 1)) + 
-       weighted_se_perch_creat^4 / sum_weights) #sum_weights all the same
-
-p_value_perch_creat <- 2 * pt(abs(t_stat_perch_creat), df = df_perch_creat, lower.tail = FALSE) #0.9999783
 
 ```
 ### Perchlorate against Measured BMI
