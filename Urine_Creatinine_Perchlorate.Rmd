@@ -2098,6 +2098,7 @@ geomean_perch_creat <- exp(sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR*log(ad
 
 #geoSD: 
 sqrt(exp(sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR*((log(adult_data_NHANES_PERCH_CREAT_Hisp$Creat_Corr_Perch)-log(geomean_perch_creat))^2))/sum(adult_data_NHANES_PERCH_CREAT_Hisp$WTSA2YR))) #1.3229
+
 ############################COME BACK HERE###############
 
 #Hispanic Viz
@@ -2214,7 +2215,7 @@ dev.off()
 
 hline_data3_M <- data.frame(
   yintercept = c(2.11, 2.52), 
-  label = c("Hispanic/Latino Weighted National Average", "Hispanic/Latino Sample Average"),
+  label = c("Hispanic/Latino\nWeighted National\nAverage", "Hispanic/Latino\nSample Average"),
   color = c("firebrick", "forestgreen")
 )
 
@@ -2234,7 +2235,7 @@ ggplot(Sampled_All_Data, aes(y = Result_P_ug_mL/Result_C_g_mL, x=as.factor(Site)
         axis.line = element_line(color="#000000"))+
   scale_linetype_manual(name = "",
                         values = c(2, 5),
-                        labels = c("Hispanic/Latino Sample Average","Hispanic/Latino Weighted National Average"))+
+                        labels = c("Hispanic/Latino\nSample Average","Hispanic/Latino\nWeighted National\nAverage"))+
   scale_color_manual(name = "",
                      values = setNames(hline_data3_M$color, hline_data3_M$label))+
   guides(linetype = guide_legend(title = ""),
