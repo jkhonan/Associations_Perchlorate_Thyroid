@@ -5078,7 +5078,7 @@ All_Data %>%
 ```{r one_last_thing}
 #Checking referent categories
 levels(as.factor(All_Data$Site))
-All_Data$Site <- C(All_Data$Site, contr.treatment, base=2)
+All_Data$Site <- C(All_Data$Site, contr.treatment, base=1)
 levels(as.factor(All_Data$Water_all))
 levels(as.factor(All_Data$Ethnicity))
 
@@ -5086,7 +5086,7 @@ model_hypo_crude <- glm(Hypo_D ~ log(Result_P_ng_mL) + Gender + age + Ethnicity,
 summary(model_hypo_crude)
 exp(confint(model_hypo_crude))
 
-model_hypo_adjusted_F <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site)  + as.factor(Water_all), data=(All_Data), family="binomial") #adjusted for creatinine, site, water
+model_hypo_adjusted_F <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site)  + as.factor(Water_all_revised), data=(All_Data), family="binomial") #adjusted for creatinine, site, water
 summary(model_hypo_adjusted_F)
 exp(confint(model_hypo_adjusted_F))
 
