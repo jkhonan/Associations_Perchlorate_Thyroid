@@ -42,7 +42,7 @@ library(ggforce)
 library(weights)
 
 #Setting WD
-setwd("~/Desktop/Yuma_Project/Yuma_R_Project/")
+#setwd("~/Desktop/Yuma_Project/Yuma_R_Project/")
 
 #Number of concentrations below the limit of detection = None
 kable(All_Data %>% 
@@ -54,11 +54,11 @@ kable(All_Data %>%
 #Number of participants who did not have concentration values for perchlorate or creatinine:
 All_Data %>% 
   filter(!is.na(Result_P_ng_mL)) %>% 
-  summarize("Number Part. with Perchlorate"=length(unique(Sample_ID)))
+  summarise(`Number Part. with Perchlorate`=length(unique(Sample_ID)))
 
 All_Data %>% 
   filter(!is.na(Result_C_mg_dL)) %>% 
-  summarize("Number Part. with Creatinine"=length(unique(Sample_ID)))
+  summarise(`Number Part. with Creatinine`=length(unique(Sample_ID)))
 
 #EMR vs SR Thyroid Probs
 All_Data %>% 
@@ -358,27 +358,27 @@ dev.off()
 
 All_Data %>% 
   filter(!is.na(fT3)) %>% 
-  summarize("Number Part. with fT3"=length(unique(ID)))
+  summarise(`Number Part. with fT3`=length(unique(ID)))
 
 All_Data %>% 
   filter(!is.na(TotalT3)) %>% 
-  summarize("Number Part. with TT3"=length(unique(ID)))
+  summarise(`Number Part. with TT3`=length(unique(ID)))
 
 All_Data %>% 
   filter(!is.na(fT4)) %>% 
-  summarize("Number Part. with fT4"=length(unique(ID)))
+  summarise(`Number Part. with fT4`=length(unique(ID)))
 
 All_Data %>% 
   filter(!is.na(TotalT4)) %>% 
-  summarize("Number Part. with TT4"=length(unique(ID)))
+  summarise(`Number Part. with TT4`=length(unique(ID)))
 
 All_Data %>% 
   filter(!is.na(TSH)) %>% 
-  summarize("Number Part. with TSH"=length(unique(ID)))
+  summarise(`Number Part. with TSH`=length(unique(ID)))
 
 All_Data %>% 
   filter(!is.na(Cortisol)) %>% 
-  summarize("Number Part. with Cortisol"=length(unique(ID)))
+  summarise(`Number Part. with Cortisol`=length(unique(ID)))
 
 #Overall
 All_Data %>% 
@@ -1998,7 +1998,7 @@ dev.off()
 
 #Stats tests for weighted values...
 #I need to do with with the logtransformed data!
-wtd.t.test(x=log(All_Data$Result_P_ng_mL), y=log(adult_data_NHANES$URXUP8), weighty = adult_data_NHANES_PERCH$WTSA2YR, samedata = F) #p=0.516, two sample test - we want one sample
+#wtd.t.test(x=log(All_Data$Result_P_ng_mL), y=log(adult_data_NHANES$URXUP8), weighty = adult_data_NHANES_PERCH$WTSA2YR, samedata = F) #p=0.516, two sample test - we want one sample
 
 weighted_geomean_perch <- weighted.mean(log(adult_data_NHANES_PERCH$URXUP8), 
                                     w = adult_data_NHANES_PERCH$WTSA2YR, 
@@ -3577,7 +3577,7 @@ sum(complete.cases(df_perch_horm)) #There are 159, again use pairwise cases.
 cor_perch_horm <- cor(df_perch_horm, use="pairwise.complete.obs")
 p_values_horm <- corr.test(cor_perch_horm)
 
-setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
 write.csv(cor_thy, file="Correlation_HealthOutcomes_Final.csv", quote=F, row.names=T)
 write.csv(cor_perch_horm, file="Correlation_Perch_Hormones_BMI_Final.csv", quote=F, row.names=T)
 
@@ -3602,8 +3602,8 @@ sum(complete.cases(df_perch_horm2)) #There are 278, again use pairwise cases.
 cor_perch_horm2 <- cor(df_perch_horm2, use="pairwise.complete.obs")
 p_values_horm2 <- corr.test(df_perch_horm2)
 
-setwd("~/Desktop/Yuma Project/Yuma - R Project/")
-write.csv(cor_perch_horm2, file="Correlations_Final.csv", quote=F, row.names=T)
+#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+#write.csv(cor_perch_horm2, file="Correlations_Final.csv", quote=F, row.names=T)
 
 
 ```
@@ -3704,7 +3704,7 @@ All_Data$Ever_Smoker <- ifelse(All_Data$Smoking_Status==0, 0,
 All_Data$Current_Smoker_D <- ifelse(All_Data$Smoking_Status==0 | 
                                       All_Data$Smoking_Status == "1", 0, 
                                ifelse(All_Data$Smoking_Status == "2" | 
-                                        All_Data$Smoking_Status == "3", 1, NA))
+                                        All_Data$Smoking_Status == "3", 1, NA)) #Smoking is irrelevent. Pulled from EMRs by another researcher, not included in survey.
 
 model1_adj_withint <- glm(Hypo_D ~ log10(Result_P_ng_mL)*Ever_Smoker + log10(Result_C_mg_dL) + Gender*age + Ethnicity + as.factor(Site) + as.factor(Water_all), data=All_Data, family="binomial")
 summary(model1_adj_withint)
@@ -4479,7 +4479,7 @@ p_values_horm_Cases <- corr.test(cor_perch_horm_Cases, use="pairwise")
 cor_perch_horm_Controls <- cor(df_perch_horm_Controls, use="pairwise.complete.obs")
 p_values_horm_Controls <- corr.test(cor_perch_horm_Controls, use="pairwise")
 
-setwd("~/Desktop/Yuma Project/Yuma - R Project/")
+#setwd("~/Desktop/Yuma Project/Yuma - R Project/")
 write.csv(cor_perch_horm_Cases, file="Correlation_Weight_Cases.csv", quote=F, row.names=T)
 write.csv(cor_perch_horm_Controls, file="Correlation_Weight_Controls.csv", quote=F, row.names=T)
 
@@ -5073,4 +5073,26 @@ All_Data %>%
 All_Data %>% 
   group_by(Site) %>% 
   summarise(n=sum(Farmer==1, na.rm = T)/sum(!is.na(Site)))
+```
+
+```{r one_last_thing}
+#Checking referent categories
+levels(as.factor(All_Data$Site))
+All_Data$Site <- C(All_Data$Site, contr.treatment, base=2)
+levels(as.factor(All_Data$Water_all))
+levels(as.factor(All_Data$Ethnicity))
+
+model_hypo_crude <- glm(Hypo_D ~ log(Result_P_ng_mL) + Gender + age + Ethnicity, data=(All_Data), family="binomial") #General model with matched variables included for residual confounding
+summary(model_hypo_crude)
+exp(confint(model_hypo_crude))
+
+model_hypo_adjusted_F <- glm(Hypo_D ~ log(Result_P_ng_mL) + log(Result_C_mg_dL) + Gender + age + Ethnicity + as.factor(Site)  + as.factor(Water_all), data=(All_Data), family="binomial") #adjusted for creatinine, site, water
+summary(model_hypo_adjusted_F)
+exp(confint(model_hypo_adjusted_F))
+
+All_Data %>% 
+  filter(ID!="Y1008" & ID!="Y1015" & ID!="R1048" & ID!="R1083" & ID!="C1050" & ID!="C1059" & ID!="C1104" & (!is.na(As75) | !is.na(Cd111) | !is.na(Cu65) | !is.na(Fe57) | !is.na(Hg202) | !is.na(Mn55) | !is.na(Pb208) | !is.na(U238))) %>%
+  filter(!is.na(Hypo_D)) %>% 
+  summarise('cases'=sum(Hypo_D==1),
+            'controls'=sum(Hypo_D==0))
 ```
